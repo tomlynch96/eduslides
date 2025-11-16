@@ -1,5 +1,6 @@
 import type { BlockInstance } from '../types/core';
 import { TextBlock } from '../blocks/renderers/TextBlock';
+import { TimerBlock } from '../blocks/renderers/TimerBlock';
 
 interface SlideCanvasProps {
   blocks: BlockInstance[];
@@ -46,10 +47,10 @@ export function SlideCanvas({ blocks, onRemoveBlock }: SlideCanvasProps) {
                 Remove
               </button>
               
-              {/* Render the block */}
-              {block.type === 'text' ? (
-                <TextBlock block={block as any} />
-              ) : (
+              {/* Render the appropriate block type */}
+              {block.type === 'text' && <TextBlock block={block as any} />}
+              {block.type === 'timer' && <TimerBlock block={block as any} />}
+              {block.type !== 'text' && block.type !== 'timer' && (
                 <div className="p-6 text-gray-500">
                   Block type "{block.type}" not yet implemented
                 </div>
