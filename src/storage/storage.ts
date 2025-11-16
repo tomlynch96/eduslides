@@ -150,6 +150,23 @@ export interface SimpleLessonData {
   savedAt: string;
 }
 
+// Complete lesson export format (includes blocks)
+export interface CompleteLessonExport {
+  formatVersion: '1.0';
+  lesson: {
+    id: string;
+    name: string;
+    description?: string;
+    author: string;
+    createdAt: string;
+  };
+  slides: Array<{
+    id: string;
+    blockIds: string[];
+  }>;
+  blocks: BlockInstance[];
+}
+
 export function saveSimpleLesson(lessonData: SimpleLessonData): void {
   const lessons = getAllSimpleLessons();
   const existingIndex = lessons.findIndex(l => l.id === lessonData.id);

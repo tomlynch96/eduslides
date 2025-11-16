@@ -5,6 +5,7 @@ interface SlideManagerProps {
     onNext: () => void;
     onNewSlide: () => void;
     onDeleteSlide: () => void;
+    onPresent: () => void;
   }
   
   export function SlideManager({ 
@@ -13,7 +14,8 @@ interface SlideManagerProps {
     onPrevious, 
     onNext, 
     onNewSlide,
-    onDeleteSlide 
+    onDeleteSlide,
+    onPresent
   }: SlideManagerProps) {
     const isFirstSlide = currentSlideIndex === 0;
     const isLastSlide = currentSlideIndex === totalSlides - 1;
@@ -56,6 +58,13 @@ interface SlideManagerProps {
   
           {/* Right: Actions */}
           <div className="flex items-center gap-3">
+            <button
+              onClick={onPresent}
+              className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded transition-colors font-medium text-lg"
+            >
+              🖥️ Present
+            </button>
+            
             <button
               onClick={onNewSlide}
               className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition-colors font-medium"

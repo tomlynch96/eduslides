@@ -5,6 +5,8 @@ import { BlockLibrary } from './components/BlockLibrary';
 import { SlideCanvas } from './components/SlideCanvas';
 import { SlideManager } from './components/SlideManager';
 import { LessonManager } from './components/LessonManager';
+import { PresentationView } from './components/PresentationView';
+import { ImportExport } from './components/ImportExport';
 import { 
   getAllBlockInstances, 
   deleteBlockInstance,
@@ -15,6 +17,13 @@ import {
   generateId,
   type SimpleLessonData
 } from './storage/storage';
+import { 
+  exportLessonAsJSON, 
+  downloadJSON, 
+  validateAndParseJSON, 
+  readJSONFile 
+} from './lessonExport';
+import { saveBlockInstance } from './storage/storage';
 
 // Simple slide type - just tracks which blocks are on it
 interface SimpleSlide {
@@ -39,6 +48,9 @@ function App() {
   
   // All saved lessons
   const [savedLessons, setSavedLessons] = useState<SimpleLessonData[]>([]);
+
+  // Presentation mode
+  const [isPresentationMode, setIsPresentationMode] = useState(false);
 
   // Load blocks and lessons from storage on mount
   useEffect(() => {
@@ -180,6 +192,94 @@ function App() {
     }
   };
 
+  const handleExportLesson = () => {
+    const lessonName = currentLessonId 
+      ? savedLessons.find(l => l.id === currentLessonId)?.name || 'Untitled Lesson'
+      : 'Untitled Lesson';
+
+    const jsonString = exportLessonAsJSON({
+      slides,
+      allBlocks,
+      lessonName,
+    });
+
+    const filename = `${lessonName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${Date.now()}.json`;
+    downloadJSON(jsonString, filename);
+  };
+
+  const handleImportLesson = async (file: File) => {
+    try {
+      const jsonString = await readJSONFile(file);
+      const result = validateAndParseJSON(jsonString);
+
+      if (!result.success) {
+        alert(`Import failed: ${result.error}`);
+        return;
+      }
+
+      if (!result.data) {
+        alert('Import failed: No data');
+        return;
+      }
+
+      const importData = result.data;
+
+      // Confirm with user
+      if (!window.confirm(
+        `Import lesson "${importData.lesson.name}"?\n\n` +
+        `This will replace your current lesson with:\n` +
+        `- ${importData.slides.length} slide(s)\n` +
+        `- ${importData.blocks.length} block(s)\n\n` +
+        `Make sure you've saved your current work!`
+      )) {
+        return;
+      }
+
+      // Import blocks (save to storage and state)
+      const importedBlocks = importData.blocks;
+      importedBlocks.forEach(block => {
+        saveBlockInstance(block);
+      });
+
+      // Add imported blocks to allBlocks state
+      const newAllBlocks = [...allBlocks];
+      importedBlocks.forEach(block => {
+        if (!newAllBlocks.find(b => b.id === block.id)) {
+          newAllBlocks.push(block);
+        }
+      });
+      setAllBlocks(newAllBlocks);
+
+      // Import slides
+      setSlides(importData.slides.map(slide => ({
+        id: slide.id,
+        blockIds: [...slide.blockIds],
+      })));
+
+      setCurrentSlideIndex(0);
+      setCurrentLessonId(null); // Treat as new lesson until saved
+
+      alert(`Successfully imported "${importData.lesson.name}"!`);
+    } catch (error) {
+      alert(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  // If in presentation mode, show presentation view
+  if (isPresentationMode) {
+    return (
+      <PresentationView
+        slides={slides}
+        allBlocks={allBlocks}
+        currentSlideIndex={currentSlideIndex}
+        onNextSlide={handleNextSlide}
+        onPreviousSlide={handlePreviousSlide}
+        onExit={() => setIsPresentationMode(false)}
+      />
+    );
+  }
+
+  // Otherwise show editing interface
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -206,6 +306,17 @@ function App() {
           onNew={handleNewLesson}
         />
 
+        {/* Import/Export */}
+        <ImportExport
+          lessonName={
+            currentLessonId 
+              ? savedLessons.find(l => l.id === currentLessonId)?.name || 'Current Lesson'
+              : 'Current Lesson'
+          }
+          onExport={handleExportLesson}
+          onImport={handleImportLesson}
+        />
+
         {/* Slide Manager */}
         <SlideManager
           currentSlideIndex={currentSlideIndex}
@@ -214,6 +325,7 @@ function App() {
           onNext={handleNextSlide}
           onNewSlide={handleNewSlide}
           onDeleteSlide={handleDeleteSlide}
+          onPresent={() => setIsPresentationMode(true)}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
