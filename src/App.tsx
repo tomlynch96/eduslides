@@ -1,20 +1,51 @@
 import { useState, useEffect } from 'react';
 import type { BlockInstance } from './types/core';
 import { BlockCreator } from './components/BlockCreator';
+import { BlockLibrary } from './components/BlockLibrary.tsx';
 import { SlideCanvas } from './components/SlideCanvas';
-import { getAllBlockInstances } from './storage/storage';
+import { getAllBlockInstances, deleteBlockInstance } from './storage/storage';
 
 function App() {
-  const [blocks, setBlocks] = useState<BlockInstance[]>([]);
+  // All blocks that have been created
+  const [allBlocks, setAllBlocks] = useState<BlockInstance[]>([]);
+  
+  // Block IDs currently on the slide
+  const [slideBlockIds, setSlideBlockIds] = useState<string[]>([]);
 
   // Load blocks from storage on mount
   useEffect(() => {
     const savedBlocks = getAllBlockInstances();
-    setBlocks(savedBlocks);
+    setAllBlocks(savedBlocks);
   }, []);
 
+  // Get the actual block instances for the current slide
+  const slideBlocks = slideBlockIds
+    .map(id => allBlocks.find(block => block.id === id))
+    .filter((block): block is BlockInstance => block !== undefined);
+
   const handleBlockCreated = (newBlock: BlockInstance) => {
-    setBlocks([...blocks, newBlock]);
+    setAllBlocks([...allBlocks, newBlock]);
+  };
+
+  const handleAddToSlide = (blockId: string) => {
+    if (!slideBlockIds.includes(blockId)) {
+      setSlideBlockIds([...slideBlockIds, blockId]);
+    }
+  };
+
+  const handleRemoveFromSlide = (blockId: string) => {
+    setSlideBlockIds(slideBlockIds.filter(id => id !== blockId));
+  };
+
+  const handleDeleteBlock = (blockId: string) => {
+    // Remove from storage
+    deleteBlockInstance(blockId);
+    
+    // Remove from state
+    setAllBlocks(allBlocks.filter(block => block.id !== blockId));
+    
+    // Remove from slide if present
+    setSlideBlockIds(slideBlockIds.filter(id => id !== blockId));
   };
 
   return (
@@ -34,14 +65,25 @@ function App() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left: Block Creator */}
-          <div>
+          {/* Left Column */}
+          <div className="space-y-8">
+            {/* Block Creator */}
             <BlockCreator onBlockCreated={handleBlockCreated} />
+            
+            {/* Block Library */}
+            <BlockLibrary
+              blocks={allBlocks}
+              onAddToSlide={handleAddToSlide}
+              onDeleteBlock={handleDeleteBlock}
+            />
           </div>
 
-          {/* Right: Slide Canvas */}
+          {/* Right Column: Slide Canvas */}
           <div>
-            <SlideCanvas blocks={blocks} />
+            <SlideCanvas
+              blocks={slideBlocks}
+              onRemoveBlock={handleRemoveFromSlide}
+            />
           </div>
         </div>
       </div>
