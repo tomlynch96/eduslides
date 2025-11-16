@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import type { BlockInstance } from '../types/core';
 import { TextBlock } from '../blocks/renderers/TextBlock';
+import { TimerBlock } from '../blocks/renderers/TimerBlock';
 
 interface PresentationViewProps {
   slides: Array<{
@@ -108,9 +109,9 @@ export function PresentationView({
             <div className="divide-y divide-gray-200">
               {currentBlocks.map((block) => (
                 <div key={block.id} className="presentation-block">
-                  {block.type === 'text' ? (
-                    <TextBlock block={block as any} />
-                  ) : (
+                  {block.type === 'text' && <TextBlock block={block as any} />}
+                  {block.type === 'timer' && <TimerBlock block={block as any} />}
+                  {block.type !== 'text' && block.type !== 'timer' && (
                     <div className="p-6 text-gray-500">
                       Block type "{block.type}" not yet implemented
                     </div>
