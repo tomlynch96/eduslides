@@ -147,10 +147,16 @@ export interface SimpleLessonData {
     id: string;
     blockIds: string[];
   }>;
+  objectives?: Array<{
+    id: string;
+    text: string;
+  }>;
+  objectivesState?: {
+    completed: string[];  // IDs of completed objectives
+  };
   savedAt: string;
 }
 
-// Complete lesson export format (includes blocks)
 export interface CompleteLessonExport {
   formatVersion: '1.0';
   lesson: {
@@ -159,6 +165,13 @@ export interface CompleteLessonExport {
     description?: string;
     author: string;
     createdAt: string;
+    objectives?: Array<{
+      id: string;
+      text: string;
+    }>;
+    objectivesState?: {
+      completed: string[];
+    };
   };
   slides: Array<{
     id: string;

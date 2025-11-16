@@ -19,9 +19,12 @@ export function BlockCreator({ onBlockCreated }: BlockCreatorProps) {
   const [alignment, setAlignment] = useState<'left' | 'center' | 'right'>('left');
 
   // Timer block fields
-  const [duration, setDuration] = useState(60); // seconds
+  const [duration, setDuration] = useState(60);
   const [label, setLabel] = useState('');
   const [autoStart, setAutoStart] = useState(false);
+
+  // Objectives block fields
+  const [showCheckboxes, setShowCheckboxes] = useState(true);
 
   const topics = getAllTopics();
   const blockTypes = getAllBlockTypes();
@@ -47,6 +50,10 @@ export function BlockCreator({ onBlockCreated }: BlockCreatorProps) {
         return;
       }
       blockContent = { duration, label, autoStart };
+    } else if (selectedType === 'objectives') {
+      blockContent = { 
+        showCheckboxes
+      };
     } else {
       alert('Block type not yet implemented');
       return;
@@ -192,6 +199,33 @@ export function BlockCreator({ onBlockCreated }: BlockCreatorProps) {
               />
               <label htmlFor="autoStart" className="text-sm text-gray-700">
                 Auto-start timer when slide loads
+              </label>
+            </div>
+          </>
+        )}
+
+        {/* Objectives Block Fields */}
+        {selectedType === 'objectives' && (
+          <>
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-gray-700 mb-2">
+                <strong>Note:</strong> Objectives blocks display the lesson objectives you set above.
+              </p>
+              <p className="text-xs text-gray-600">
+                Set your lesson objectives using the "Lesson Objectives" section above, then create this block to display them on your slides.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="showCheckboxes"
+                checked={showCheckboxes}
+                onChange={(e) => setShowCheckboxes(e.target.checked)}
+                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <label htmlFor="showCheckboxes" className="text-sm text-gray-700">
+                Show interactive checkboxes (allow ticking off during lesson)
               </label>
             </div>
           </>

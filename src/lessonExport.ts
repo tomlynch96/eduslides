@@ -12,10 +12,16 @@ interface ExportData {
   }>;
   allBlocks: BlockInstance[];
   lessonName: string;
+  objectives?: Array<{
+    id: string;
+    text: string;
+  }>;
+  objectivesState?: {
+    completed: string[];
+  };
 }
 
 export function exportLessonAsJSON(data: ExportData): string {
-  // Get unique blocks used in this lesson
   const usedBlockIds = new Set<string>();
   data.slides.forEach(slide => {
     slide.blockIds.forEach(id => usedBlockIds.add(id));
@@ -33,6 +39,8 @@ export function exportLessonAsJSON(data: ExportData): string {
       description: `Exported lesson: ${data.lessonName}`,
       author: 'EduSlides User',
       createdAt: new Date().toISOString(),
+      objectives: data.objectives,
+      objectivesState: data.objectivesState
     },
     slides: data.slides.map(slide => ({
       id: slide.id,

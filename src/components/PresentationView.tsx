@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import type { BlockInstance } from '../types/core';
 import { TextBlock } from '../blocks/renderers/TextBlock';
 import { TimerBlock } from '../blocks/renderers/TimerBlock';
+import { ObjectivesBlock } from '../blocks/renderers/ObjectivesBlock';
 
 interface PresentationViewProps {
   slides: Array<{
@@ -13,6 +14,9 @@ interface PresentationViewProps {
   onNextSlide: () => void;
   onPreviousSlide: () => void;
   onExit: () => void;
+  lessonObjectives: Array<{ id: string; text: string }>;
+  completedObjectives: string[];
+  onToggleObjective: (objectiveId: string) => void;
 }
 
 export function PresentationView({
@@ -22,6 +26,9 @@ export function PresentationView({
   onNextSlide,
   onPreviousSlide,
   onExit,
+  lessonObjectives,
+  completedObjectives,
+  onToggleObjective,
 }: PresentationViewProps) {
   // Keyboard navigation
   useEffect(() => {
@@ -111,7 +118,15 @@ export function PresentationView({
                 <div key={block.id} className="presentation-block">
                   {block.type === 'text' && <TextBlock block={block as any} />}
                   {block.type === 'timer' && <TimerBlock block={block as any} />}
-                  {block.type !== 'text' && block.type !== 'timer' && (
+                  {block.type === 'objectives' && (
+                    <ObjectivesBlock 
+                      block={block as any}
+                      lessonObjectives={lessonObjectives}
+                      completedObjectives={completedObjectives}
+                      onToggleObjective={onToggleObjective}
+                    />
+                  )}
+                  {block.type !== 'text' && block.type !== 'timer' && block.type !== 'objectives' && (
                     <div className="p-6 text-gray-500">
                       Block type "{block.type}" not yet implemented
                     </div>

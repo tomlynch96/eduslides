@@ -1,13 +1,23 @@
 import type { BlockInstance } from '../types/core';
 import { TextBlock } from '../blocks/renderers/TextBlock';
 import { TimerBlock } from '../blocks/renderers/TimerBlock';
+import { ObjectivesBlock } from '../blocks/renderers/ObjectivesBlock';
 
 interface SlideCanvasProps {
   blocks: BlockInstance[];
   onRemoveBlock: (blockId: string) => void;
+  lessonObjectives: Array<{ id: string; text: string }>;
+  completedObjectives: string[];
+  onToggleObjective: (objectiveId: string) => void;
 }
 
-export function SlideCanvas({ blocks, onRemoveBlock }: SlideCanvasProps) {
+export function SlideCanvas({ 
+  blocks, 
+  onRemoveBlock, 
+  lessonObjectives, 
+  completedObjectives, 
+  onToggleObjective 
+}: SlideCanvasProps) {
   if (blocks.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-lg border-2 border-dashed border-gray-300 p-12 text-center min-h-[500px] flex items-center justify-center">
@@ -50,7 +60,15 @@ export function SlideCanvas({ blocks, onRemoveBlock }: SlideCanvasProps) {
               {/* Render the appropriate block type */}
               {block.type === 'text' && <TextBlock block={block as any} />}
               {block.type === 'timer' && <TimerBlock block={block as any} />}
-              {block.type !== 'text' && block.type !== 'timer' && (
+              {block.type === 'objectives' && (
+                <ObjectivesBlock 
+                  block={block as any} 
+                  lessonObjectives={lessonObjectives}
+                  completedObjectives={completedObjectives}
+                  onToggleObjective={onToggleObjective}
+                />
+              )}
+              {block.type !== 'text' && block.type !== 'timer' && block.type !== 'objectives' && (
                 <div className="p-6 text-gray-500">
                   Block type "{block.type}" not yet implemented
                 </div>

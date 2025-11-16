@@ -7,6 +7,7 @@ import { SlideManager } from './components/SlideManager';
 import { LessonManager } from './components/LessonManager';
 import { PresentationView } from './components/PresentationView';
 import { ImportExport } from './components/ImportExport';
+import { LessonObjectivesManager } from './components/LessonObjectivesManager';
 import { 
   getAllBlockInstances, 
   deleteBlockInstance,
@@ -51,6 +52,14 @@ function App() {
 
   // Presentation mode
   const [isPresentationMode, setIsPresentationMode] = useState(false);
+
+  // Lesson objectives (separate from blocks)
+  const [lessonObjectives, setLessonObjectives] = useState<Array<{
+    id: string;
+    text: string;
+  }>>([]);
+  
+  const [completedObjectives, setCompletedObjectives] = useState<string[]>([]);
 
   // Load blocks and lessons from storage on mount
   useEffect(() => {
@@ -148,6 +157,8 @@ function App() {
         id: slide.id,
         blockIds: [...slide.blockIds]
       })),
+      objectives: lessonObjectives.length > 0 ? lessonObjectives : undefined,
+      objectivesState: completedObjectives.length > 0 ? { completed: completedObjectives } : undefined,
       savedAt: new Date().toISOString()
     };
     
@@ -167,6 +178,8 @@ function App() {
       id: slide.id,
       blockIds: [...slide.blockIds]
     })));
+    setLessonObjectives(lesson.objectives || []);
+    setCompletedObjectives(lesson.objectivesState?.completed || []);
     setCurrentLessonId(lesson.id);
     setCurrentSlideIndex(0);
   };
@@ -189,6 +202,8 @@ function App() {
       setSlides([{ id: 'slide-1', blockIds: [] }]);
       setCurrentSlideIndex(0);
       setCurrentLessonId(null);
+      setLessonObjectives([]);
+      setCompletedObjectives([]);
     }
   };
 
@@ -197,11 +212,15 @@ function App() {
       ? savedLessons.find(l => l.id === currentLessonId)?.name || 'Untitled Lesson'
       : 'Untitled Lesson';
 
-    const jsonString = exportLessonAsJSON({
+    const exportData = {
       slides,
       allBlocks,
       lessonName,
-    });
+      objectives: lessonObjectives,
+      objectivesState: completedObjectives.length > 0 ? { completed: completedObjectives } : undefined
+    };
+
+    const jsonString = exportLessonAsJSON(exportData);
 
     const filename = `${lessonName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${Date.now()}.json`;
     downloadJSON(jsonString, filename);
@@ -256,13 +275,34 @@ function App() {
         blockIds: [...slide.blockIds],
       })));
 
+      // Import objectives if present
+      if (importData.lesson.objectives) {
+        setLessonObjectives(importData.lesson.objectives);
+      } else {
+        setLessonObjectives([]);
+      }
+      
+      if (importData.lesson.objectivesState) {
+        setCompletedObjectives(importData.lesson.objectivesState.completed);
+      } else {
+        setCompletedObjectives([]);
+      }
+
       setCurrentSlideIndex(0);
-      setCurrentLessonId(null); // Treat as new lesson until saved
+      setCurrentLessonId(null);
 
       alert(`Successfully imported "${importData.lesson.name}"!`);
     } catch (error) {
       alert(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  };
+
+  const handleToggleObjective = (objectiveId: string) => {
+    const newCompleted = completedObjectives.includes(objectiveId)
+      ? completedObjectives.filter(id => id !== objectiveId)
+      : [...completedObjectives, objectiveId];
+    
+    setCompletedObjectives(newCompleted);
   };
 
   // If in presentation mode, show presentation view
@@ -275,6 +315,9 @@ function App() {
         onNextSlide={handleNextSlide}
         onPreviousSlide={handlePreviousSlide}
         onExit={() => setIsPresentationMode(false)}
+        lessonObjectives={lessonObjectives}
+        completedObjectives={completedObjectives}
+        onToggleObjective={handleToggleObjective}
       />
     );
   }
@@ -317,6 +360,12 @@ function App() {
           onImport={handleImportLesson}
         />
 
+        {/* Lesson Objectives Manager */}
+        <LessonObjectivesManager
+          objectives={lessonObjectives}
+          onUpdate={setLessonObjectives}
+        />
+
         {/* Slide Manager */}
         <SlideManager
           currentSlideIndex={currentSlideIndex}
@@ -347,6 +396,9 @@ function App() {
             <SlideCanvas
               blocks={currentSlideBlocks}
               onRemoveBlock={handleRemoveFromSlide}
+              lessonObjectives={lessonObjectives}
+              completedObjectives={completedObjectives}
+              onToggleObjective={handleToggleObjective}
             />
           </div>
         </div>
