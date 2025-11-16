@@ -15,7 +15,8 @@ export type BlockTypeName =
   | 'timer'
   | 'objectives'
   | 'sequence'
-  | 'image';
+  | 'image'
+  | 'question';
 
 export interface BlockTypeField {
   name: string;
@@ -91,7 +92,13 @@ export interface SequenceBlockInstance extends BlockInstance {
     revealMode: 'all' | 'one-by-one' | 'click-to-reveal';
   };
 }
-
+export interface QuestionBlockInstance extends BlockInstance {
+  type: 'question';
+  content: {
+    questions: string[];  // Array of questions
+    answers: string[];    // Array of corresponding answers
+  };
+}
 // ============================================
 // SLIDES
 // ============================================

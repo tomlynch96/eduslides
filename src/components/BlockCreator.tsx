@@ -26,6 +26,10 @@ export function BlockCreator({ onBlockCreated }: BlockCreatorProps) {
   // Objectives block fields
   const [showCheckboxes, setShowCheckboxes] = useState(true);
 
+  // Question block fields
+  const [questionsText, setQuestionsText] = useState('');
+  const [answersText, setAnswersText] = useState('');
+  
   const topics = getAllTopics();
   const blockTypes = getAllBlockTypes();
 
@@ -54,6 +58,33 @@ export function BlockCreator({ onBlockCreated }: BlockCreatorProps) {
       blockContent = { 
         showCheckboxes
       };
+    } else if (selectedType === 'question') {
+      if (!questionsText.trim() || !answersText.trim()) {
+        alert('Please enter both questions and answers');
+        return;
+      }
+      
+      const questions = questionsText
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+      
+      const answers = answersText
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+      
+      if (questions.length === 0 || answers.length === 0) {
+        alert('Please enter at least one question and answer');
+        return;
+      }
+      
+      if (questions.length !== answers.length) {
+        alert(`Mismatch: You have ${questions.length} questions but ${answers.length} answers. They must match!`);
+        return;
+      }
+      
+      blockContent = { questions, answers };
     } else {
       alert('Block type not yet implemented');
       return;
@@ -80,6 +111,9 @@ export function BlockCreator({ onBlockCreated }: BlockCreatorProps) {
       setDuration(60);
       setLabel('');
       setAutoStart(false);
+    } else if (selectedType === 'question') {
+      setQuestionsText('');
+      setAnswersText('');
     }
     setTopic('');
   };
@@ -227,6 +261,46 @@ export function BlockCreator({ onBlockCreated }: BlockCreatorProps) {
               <label htmlFor="showCheckboxes" className="text-sm text-gray-700">
                 Show interactive checkboxes (allow ticking off during lesson)
               </label>
+            </div>
+          </>
+        )}
+        {/* Question Block Fields */}
+        {selectedType === 'question' && (
+          <>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Questions (one per line)
+              </label>
+              <textarea
+                value={questionsText}
+                onChange={(e) => setQuestionsText(e.target.value)}
+                placeholder="Enter questions, one per line:
+What is the speed of light?
+What is Newton's first law?
+Define wavelength."
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={6}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Answers (one per line, matching questions above)
+              </label>
+              <textarea
+                value={answersText}
+                onChange={(e) => setAnswersText(e.target.value)}
+                placeholder="Enter answers in the same order as questions:
+3 × 10⁸ m/s
+An object at rest stays at rest unless acted upon by force
+The distance between successive wave crests"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={6}
+              />
+            </div>
+
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm text-gray-700">
+              <span className="font-bold">Tip:</span> Make sure the number of questions matches the number of answers. Each answer should correspond to the question in the same position.
             </div>
           </>
         )}

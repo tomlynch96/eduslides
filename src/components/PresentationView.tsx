@@ -3,6 +3,7 @@ import type { BlockInstance } from '../types/core';
 import { TextBlock } from '../blocks/renderers/TextBlock';
 import { TimerBlock } from '../blocks/renderers/TimerBlock';
 import { ObjectivesBlock } from '../blocks/renderers/ObjectivesBlock';
+import { QuestionBlock } from '../blocks/renderers/QuestionBlock';
 
 interface PresentationViewProps {
   slides: Array<{
@@ -126,7 +127,8 @@ export function PresentationView({
                       onToggleObjective={onToggleObjective}
                     />
                   )}
-                  {block.type !== 'text' && block.type !== 'timer' && block.type !== 'objectives' && (
+                  {block.type === 'question' && <QuestionBlock block={block as any} />}
+                  {!['text', 'timer', 'objectives', 'question'].includes(block.type) && (
                     <div className="p-6 text-gray-500">
                       Block type "{block.type}" not yet implemented
                     </div>

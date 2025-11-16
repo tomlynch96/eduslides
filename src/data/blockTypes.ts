@@ -130,6 +130,27 @@ export const BLOCK_TYPES: Record<string, BlockType> = {
     ],
     icon: '🖼️',
   },
+
+  question: {
+    id: 'question',
+    name: 'Question & Answer Block',
+    description: 'Interactive Q&A with reveal and fullscreen modes',
+    fields: [
+      {
+        name: 'questions',
+        type: 'string',
+        required: true,
+        isTemplateable: true,
+      },
+      {
+        name: 'answers',
+        type: 'string',
+        required: true,
+        isTemplateable: true,
+      },
+    ],
+    icon: '❓',
+  },
 };
 
 // Helper to get a block type by ID
