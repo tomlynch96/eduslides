@@ -1,16 +1,28 @@
 import { useState, useEffect } from 'react';
 import type { BlockInstance } from './types/core';
 import { BlockCreator } from './components/BlockCreator';
-import { BlockLibrary } from './components/BlockLibrary.tsx';
+import { BlockLibrary } from './components/BlockLibrary';
 import { SlideCanvas } from './components/SlideCanvas';
+import { SlideManager } from './components/SlideManager';
 import { getAllBlockInstances, deleteBlockInstance } from './storage/storage';
+
+// Simple slide type - just tracks which blocks are on it
+interface SimpleSlide {
+  id: string;
+  blockIds: string[];
+}
 
 function App() {
   // All blocks that have been created
   const [allBlocks, setAllBlocks] = useState<BlockInstance[]>([]);
   
-  // Block IDs currently on the slide
-  const [slideBlockIds, setSlideBlockIds] = useState<string[]>([]);
+  // All slides in the lesson
+  const [slides, setSlides] = useState<SimpleSlide[]>([
+    { id: 'slide-1', blockIds: [] }
+  ]);
+  
+  // Which slide we're currently viewing/editing
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
   // Load blocks from storage on mount
   useEffect(() => {
@@ -18,8 +30,11 @@ function App() {
     setAllBlocks(savedBlocks);
   }, []);
 
+  // Get the current slide
+  const currentSlide = slides[currentSlideIndex];
+  
   // Get the actual block instances for the current slide
-  const slideBlocks = slideBlockIds
+  const currentSlideBlocks = currentSlide.blockIds
     .map(id => allBlocks.find(block => block.id === id))
     .filter((block): block is BlockInstance => block !== undefined);
 
@@ -28,24 +43,71 @@ function App() {
   };
 
   const handleAddToSlide = (blockId: string) => {
-    if (!slideBlockIds.includes(blockId)) {
-      setSlideBlockIds([...slideBlockIds, blockId]);
+    if (!currentSlide.blockIds.includes(blockId)) {
+      const updatedSlides = [...slides];
+      updatedSlides[currentSlideIndex] = {
+        ...currentSlide,
+        blockIds: [...currentSlide.blockIds, blockId]
+      };
+      setSlides(updatedSlides);
     }
   };
 
   const handleRemoveFromSlide = (blockId: string) => {
-    setSlideBlockIds(slideBlockIds.filter(id => id !== blockId));
+    const updatedSlides = [...slides];
+    updatedSlides[currentSlideIndex] = {
+      ...currentSlide,
+      blockIds: currentSlide.blockIds.filter(id => id !== blockId)
+    };
+    setSlides(updatedSlides);
   };
 
   const handleDeleteBlock = (blockId: string) => {
     // Remove from storage
     deleteBlockInstance(blockId);
     
-    // Remove from state
+    // Remove from all blocks
     setAllBlocks(allBlocks.filter(block => block.id !== blockId));
     
-    // Remove from slide if present
-    setSlideBlockIds(slideBlockIds.filter(id => id !== blockId));
+    // Remove from ALL slides that contain it
+    const updatedSlides = slides.map(slide => ({
+      ...slide,
+      blockIds: slide.blockIds.filter(id => id !== blockId)
+    }));
+    setSlides(updatedSlides);
+  };
+
+  const handleNewSlide = () => {
+    const newSlide: SimpleSlide = {
+      id: `slide-${Date.now()}`,
+      blockIds: []
+    };
+    setSlides([...slides, newSlide]);
+    setCurrentSlideIndex(slides.length); // Jump to new slide
+  };
+
+  const handleDeleteSlide = () => {
+    if (slides.length === 1) return; // Can't delete last slide
+    
+    const updatedSlides = slides.filter((_, index) => index !== currentSlideIndex);
+    setSlides(updatedSlides);
+    
+    // Adjust current index if needed
+    if (currentSlideIndex >= updatedSlides.length) {
+      setCurrentSlideIndex(updatedSlides.length - 1);
+    }
+  };
+
+  const handlePreviousSlide = () => {
+    if (currentSlideIndex > 0) {
+      setCurrentSlideIndex(currentSlideIndex - 1);
+    }
+  };
+
+  const handleNextSlide = () => {
+    if (currentSlideIndex < slides.length - 1) {
+      setCurrentSlideIndex(currentSlideIndex + 1);
+    }
   };
 
   return (
@@ -64,6 +126,16 @@ function App() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-8 py-8">
+        {/* Slide Manager */}
+        <SlideManager
+          currentSlideIndex={currentSlideIndex}
+          totalSlides={slides.length}
+          onPrevious={handlePreviousSlide}
+          onNext={handleNextSlide}
+          onNewSlide={handleNewSlide}
+          onDeleteSlide={handleDeleteSlide}
+        />
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Column */}
           <div className="space-y-8">
@@ -81,7 +153,7 @@ function App() {
           {/* Right Column: Slide Canvas */}
           <div>
             <SlideCanvas
-              blocks={slideBlocks}
+              blocks={currentSlideBlocks}
               onRemoveBlock={handleRemoveFromSlide}
             />
           </div>
