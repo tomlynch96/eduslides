@@ -130,6 +130,54 @@ export function getAllLessons(): Lesson[] {
   return data ? JSON.parse(data) : [];
 }
 
+export function deleteLesson(id: string): void {
+  const lessons = getAllLessons().filter(l => l.id !== id);
+  localStorage.setItem(STORAGE_KEYS.LESSONS, JSON.stringify(lessons));
+}
+
+// ============================================
+// SIMPLE LESSON FORMAT (for our current use)
+// ============================================
+
+// Simplified lesson format that matches our current app structure
+export interface SimpleLessonData {
+  id: string;
+  name: string;
+  slides: Array<{
+    id: string;
+    blockIds: string[];
+  }>;
+  savedAt: string;
+}
+
+export function saveSimpleLesson(lessonData: SimpleLessonData): void {
+  const lessons = getAllSimpleLessons();
+  const existingIndex = lessons.findIndex(l => l.id === lessonData.id);
+  
+  if (existingIndex >= 0) {
+    lessons[existingIndex] = lessonData;
+  } else {
+    lessons.push(lessonData);
+  }
+  
+  localStorage.setItem('eduslides_simple_lessons', JSON.stringify(lessons));
+}
+
+export function getAllSimpleLessons(): SimpleLessonData[] {
+  const data = localStorage.getItem('eduslides_simple_lessons');
+  return data ? JSON.parse(data) : [];
+}
+
+export function getSimpleLesson(id: string): SimpleLessonData | undefined {
+  const lessons = getAllSimpleLessons();
+  return lessons.find(l => l.id === id);
+}
+
+export function deleteSimpleLesson(id: string): void {
+  const lessons = getAllSimpleLessons().filter(l => l.id !== id);
+  localStorage.setItem('eduslides_simple_lessons', JSON.stringify(lessons));
+}
+
 // ============================================
 // UTILITIES
 // ============================================
@@ -142,4 +190,5 @@ export function clearAllData(): void {
   Object.values(STORAGE_KEYS).forEach(key => {
     localStorage.removeItem(key);
   });
+  localStorage.removeItem('eduslides_simple_lessons');
 }

@@ -4,7 +4,17 @@ import { BlockCreator } from './components/BlockCreator';
 import { BlockLibrary } from './components/BlockLibrary';
 import { SlideCanvas } from './components/SlideCanvas';
 import { SlideManager } from './components/SlideManager';
-import { getAllBlockInstances, deleteBlockInstance } from './storage/storage';
+import { LessonManager } from './components/LessonManager';
+import { 
+  getAllBlockInstances, 
+  deleteBlockInstance,
+  saveSimpleLesson,
+  getAllSimpleLessons,
+  getSimpleLesson,
+  deleteSimpleLesson,
+  generateId,
+  type SimpleLessonData
+} from './storage/storage';
 
 // Simple slide type - just tracks which blocks are on it
 interface SimpleSlide {
@@ -16,18 +26,27 @@ function App() {
   // All blocks that have been created
   const [allBlocks, setAllBlocks] = useState<BlockInstance[]>([]);
   
-  // All slides in the lesson
+  // All slides in the current lesson
   const [slides, setSlides] = useState<SimpleSlide[]>([
     { id: 'slide-1', blockIds: [] }
   ]);
   
   // Which slide we're currently viewing/editing
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  
+  // Current lesson ID (null if unsaved)
+  const [currentLessonId, setCurrentLessonId] = useState<string | null>(null);
+  
+  // All saved lessons
+  const [savedLessons, setSavedLessons] = useState<SimpleLessonData[]>([]);
 
-  // Load blocks from storage on mount
+  // Load blocks and lessons from storage on mount
   useEffect(() => {
     const savedBlocks = getAllBlockInstances();
     setAllBlocks(savedBlocks);
+    
+    const lessons = getAllSimpleLessons();
+    setSavedLessons(lessons);
   }, []);
 
   // Get the current slide
@@ -83,16 +102,15 @@ function App() {
       blockIds: []
     };
     setSlides([...slides, newSlide]);
-    setCurrentSlideIndex(slides.length); // Jump to new slide
+    setCurrentSlideIndex(slides.length);
   };
 
   const handleDeleteSlide = () => {
-    if (slides.length === 1) return; // Can't delete last slide
+    if (slides.length === 1) return;
     
     const updatedSlides = slides.filter((_, index) => index !== currentSlideIndex);
     setSlides(updatedSlides);
     
-    // Adjust current index if needed
     if (currentSlideIndex >= updatedSlides.length) {
       setCurrentSlideIndex(updatedSlides.length - 1);
     }
@@ -107,6 +125,58 @@ function App() {
   const handleNextSlide = () => {
     if (currentSlideIndex < slides.length - 1) {
       setCurrentSlideIndex(currentSlideIndex + 1);
+    }
+  };
+
+  const handleSaveLesson = (name: string) => {
+    const lessonData: SimpleLessonData = {
+      id: currentLessonId || generateId(),
+      name,
+      slides: slides.map(slide => ({
+        id: slide.id,
+        blockIds: [...slide.blockIds]
+      })),
+      savedAt: new Date().toISOString()
+    };
+    
+    saveSimpleLesson(lessonData);
+    setCurrentLessonId(lessonData.id);
+    
+    // Refresh saved lessons list
+    const lessons = getAllSimpleLessons();
+    setSavedLessons(lessons);
+  };
+
+  const handleLoadLesson = (lessonId: string) => {
+    const lesson = getSimpleLesson(lessonId);
+    if (!lesson) return;
+    
+    setSlides(lesson.slides.map(slide => ({
+      id: slide.id,
+      blockIds: [...slide.blockIds]
+    })));
+    setCurrentLessonId(lesson.id);
+    setCurrentSlideIndex(0);
+  };
+
+  const handleDeleteLesson = (lessonId: string) => {
+    deleteSimpleLesson(lessonId);
+    
+    // Refresh saved lessons list
+    const lessons = getAllSimpleLessons();
+    setSavedLessons(lessons);
+    
+    // If we deleted the current lesson, clear the current lesson ID
+    if (lessonId === currentLessonId) {
+      setCurrentLessonId(null);
+    }
+  };
+
+  const handleNewLesson = () => {
+    if (window.confirm('Start a new lesson? Any unsaved changes will be lost.')) {
+      setSlides([{ id: 'slide-1', blockIds: [] }]);
+      setCurrentSlideIndex(0);
+      setCurrentLessonId(null);
     }
   };
 
@@ -126,6 +196,16 @@ function App() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-8 py-8">
+        {/* Lesson Manager */}
+        <LessonManager
+          savedLessons={savedLessons}
+          currentLessonId={currentLessonId}
+          onSave={handleSaveLesson}
+          onLoad={handleLoadLesson}
+          onDelete={handleDeleteLesson}
+          onNew={handleNewLesson}
+        />
+
         {/* Slide Manager */}
         <SlideManager
           currentSlideIndex={currentSlideIndex}
