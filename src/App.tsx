@@ -3,11 +3,8 @@ import type { BlockInstance } from './types/core';
 import { BlockCreator } from './components/BlockCreator';
 import { BlockLibrary } from './components/BlockLibrary';
 import { SlideCanvas } from './components/SlideCanvas';
-import { SlideManager } from './components/SlideManager';
-import { LessonManager } from './components/LessonManager';
 import { PresentationView } from './components/PresentationView';
-import { ImportExport } from './components/ImportExport';
-import { LessonObjectivesManager } from './components/LessonObjectivesManager';
+import { TopMenuBar } from './components/TopMenuBar';
 import { 
   getAllBlockInstances, 
   deleteBlockInstance,
@@ -324,62 +321,47 @@ function App() {
 
   // Otherwise show editing interface
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-8 py-6">
-          <h1 className="text-3xl font-bold text-gray-900">
+        <div className="max-w-7xl mx-auto px-8 py-4">
+          <h1 className="text-2xl font-bold text-gray-900">
             EduSlides
           </h1>
-          <p className="text-gray-600 mt-1">
-            Block-based lesson builder for teachers
-          </p>
         </div>
       </div>
 
+      {/* Top Menu Bar */}
+      <TopMenuBar
+        currentLessonName={
+          currentLessonId 
+            ? savedLessons.find(l => l.id === currentLessonId)?.name || null
+            : null
+        }
+        currentSlideIndex={currentSlideIndex}
+        totalSlides={slides.length}
+        savedLessons={savedLessons}
+        currentLessonId={currentLessonId}
+        lessonObjectives={lessonObjectives}
+        onUpdateObjectives={setLessonObjectives}
+        onNewLesson={handleNewLesson}
+        onSaveLesson={handleSaveLesson}
+        onLoadLesson={handleLoadLesson}
+        onDeleteLesson={handleDeleteLesson}
+        onExportLesson={handleExportLesson}
+        onImportLesson={handleImportLesson}
+        onPreviousSlide={handlePreviousSlide}
+        onNextSlide={handleNextSlide}
+        onNewSlide={handleNewSlide}
+        onDeleteSlide={handleDeleteSlide}
+        onPresent={() => setIsPresentationMode(true)}
+      />
+
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-8 py-8">
-        {/* Lesson Manager */}
-        <LessonManager
-          savedLessons={savedLessons}
-          currentLessonId={currentLessonId}
-          onSave={handleSaveLesson}
-          onLoad={handleLoadLesson}
-          onDelete={handleDeleteLesson}
-          onNew={handleNewLesson}
-        />
-
-        {/* Import/Export */}
-        <ImportExport
-          lessonName={
-            currentLessonId 
-              ? savedLessons.find(l => l.id === currentLessonId)?.name || 'Current Lesson'
-              : 'Current Lesson'
-          }
-          onExport={handleExportLesson}
-          onImport={handleImportLesson}
-        />
-
-        {/* Lesson Objectives Manager */}
-        <LessonObjectivesManager
-          objectives={lessonObjectives}
-          onUpdate={setLessonObjectives}
-        />
-
-        {/* Slide Manager */}
-        <SlideManager
-          currentSlideIndex={currentSlideIndex}
-          totalSlides={slides.length}
-          onPrevious={handlePreviousSlide}
-          onNext={handleNextSlide}
-          onNewSlide={handleNewSlide}
-          onDeleteSlide={handleDeleteSlide}
-          onPresent={() => setIsPresentationMode(true)}
-        />
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="flex-1 max-w-7xl mx-auto px-8 py-6 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
           {/* Left Column */}
-          <div className="space-y-8">
+          <div className="space-y-6">
             {/* Block Creator */}
             <BlockCreator onBlockCreated={handleBlockCreated} />
             
