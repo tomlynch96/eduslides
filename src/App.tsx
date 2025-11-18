@@ -5,6 +5,7 @@ import { BlockLibrary } from './components/BlockLibrary';
 import { SlideCanvas } from './components/SlideCanvas';
 import { PresentationView } from './components/PresentationView';
 import { TopMenuBar } from './components/TopMenuBar';
+import { getDefaultBlockByType } from './blockDefaults';
 import { 
   getAllBlockInstances, 
   deleteBlockInstance,
@@ -98,7 +99,24 @@ function App() {
     };
     setSlides(updatedSlides);
   };
-
+  const handleInsertBlock = (blockType: BlockInstance['type']) => {
+    // Create a new block with default values
+    const newBlock = getDefaultBlockByType(blockType);
+    
+    // Save to storage
+    saveBlockInstance(newBlock);
+    
+    // Add to allBlocks state
+    setAllBlocks([...allBlocks, newBlock]);
+    
+    // Immediately add to current slide
+    const updatedSlides = [...slides];
+    updatedSlides[currentSlideIndex] = {
+      ...currentSlide,
+      blockIds: [...currentSlide.blockIds, newBlock.id]
+    };
+    setSlides(updatedSlides);
+  };
   const handleDeleteBlock = (blockId: string) => {
     // Remove from storage
     deleteBlockInstance(blockId);
@@ -355,6 +373,7 @@ function App() {
         onNewSlide={handleNewSlide}
         onDeleteSlide={handleDeleteSlide}
         onPresent={() => setIsPresentationMode(true)}
+        onInsertBlock={handleInsertBlock}
       />
 
       {/* Main Content */}

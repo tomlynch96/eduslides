@@ -4,6 +4,8 @@ import { LoadLessonMenu } from './LoadLessonMenu';
 import { ObjectivesModal } from './ObjectivesModal';
 import { SaveLessonModal } from './SaveLessonModal';
 import type { SimpleLessonData } from '../storage/storage';
+import { BLOCK_TYPE_METADATA } from '../blockDefaults';
+import type { BlockInstance } from '../types/core';
 
 interface TopMenuBarProps {
   currentLessonName: string | null;
@@ -24,6 +26,7 @@ interface TopMenuBarProps {
   onNewSlide: () => void;
   onDeleteSlide: () => void;
   onPresent: () => void;
+  onInsertBlock: (blockType: BlockInstance['type']) => void;
 }
 
 export function TopMenuBar({
@@ -45,6 +48,7 @@ export function TopMenuBar({
   onNewSlide,
   onDeleteSlide,
   onPresent,
+  onInsertBlock,
 }: TopMenuBarProps) {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showObjectivesModal, setShowObjectivesModal] = useState(false);
@@ -70,14 +74,10 @@ export function TopMenuBar({
     { label: 'Import JSON', onClick: handleImportClick },
   ];
 
-  const insertMenuItems = [
-    { label: 'Text Block', onClick: () => {} },
-    { label: 'Timer Block', onClick: () => {} },
-    { label: 'Objectives Block', onClick: () => {} },
-    { label: 'Question Block', onClick: () => {} },
-    { separator: true },
-    { label: 'New Slide', onClick: onNewSlide },
-  ];
+  const insertMenuItems = BLOCK_TYPE_METADATA.map(blockMeta => ({
+    label: `${blockMeta.icon} ${blockMeta.label}`,
+    onClick: () => onInsertBlock(blockMeta.type),
+  }));
 
   const isFirstSlide = currentSlideIndex === 0;
   const isLastSlide = currentSlideIndex === totalSlides - 1;
