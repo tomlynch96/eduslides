@@ -3,11 +3,26 @@ import type { QuestionBlockInstance } from '../../types/core';
 
 interface QuestionBlockProps {
   block: QuestionBlockInstance;
+  isEditing?: boolean;
+  onUpdate?: (updatedBlock: QuestionBlockInstance) => void;
+  onStartEdit?: () => void;
+  onStopEdit?: () => void;
 }
 
-export function QuestionBlock({ block }: QuestionBlockProps) {
+export function QuestionBlock({ 
+  block,
+  isEditing = false,
+  onUpdate,
+  onStartEdit,
+  onStopEdit
+}: QuestionBlockProps) {
   const { questions, answers } = block.content;
   
+  // Edit mode state
+  const [editQuestions, setEditQuestions] = useState<string[]>(questions.length > 0 ? questions : ['']);
+  const [editAnswers, setEditAnswers] = useState<string[]>(answers.length > 0 ? answers : ['']);
+  
+  // View mode state
   const [revealedAnswers, setRevealedAnswers] = useState<Set<number>>(new Set());
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -55,6 +70,142 @@ export function QuestionBlock({ block }: QuestionBlockProps) {
       setShowAnswerInFullscreen(false);
     }
   };
+
+  // Edit mode handlers
+  const handleAddPair = () => {
+    setEditQuestions([...editQuestions, '']);
+    setEditAnswers([...editAnswers, '']);
+  };
+
+  const handleRemovePair = (index: number) => {
+    if (editQuestions.length > 1) {
+      setEditQuestions(editQuestions.filter((_, i) => i !== index));
+      setEditAnswers(editAnswers.filter((_, i) => i !== index));
+    }
+  };
+
+  const handleQuestionChange = (index: number, value: string) => {
+    const newQuestions = [...editQuestions];
+    newQuestions[index] = value;
+    setEditQuestions(newQuestions);
+  };
+
+  const handleAnswerChange = (index: number, value: string) => {
+    const newAnswers = [...editAnswers];
+    newAnswers[index] = value;
+    setEditAnswers(newAnswers);
+  };
+
+  const handleSave = () => {
+    // Filter out empty pairs
+    const filteredPairs = editQuestions
+      .map((q, i) => ({ question: q.trim(), answer: editAnswers[i]?.trim() || '' }))
+      .filter(pair => pair.question || pair.answer);
+
+    if (filteredPairs.length === 0) {
+      alert('Please add at least one question and answer pair');
+      return;
+    }
+
+    const finalQuestions = filteredPairs.map(p => p.question);
+    const finalAnswers = filteredPairs.map(p => p.answer);
+
+    if (onUpdate) {
+      onUpdate({
+        ...block,
+        content: {
+          questions: finalQuestions,
+          answers: finalAnswers,
+        },
+        updatedAt: new Date().toISOString(),
+      });
+    }
+    if (onStopEdit) {
+      onStopEdit();
+    }
+  };
+
+  const handleCancel = () => {
+    setEditQuestions(questions.length > 0 ? questions : ['']);
+    setEditAnswers(answers.length > 0 ? answers : ['']);
+    if (onStopEdit) {
+      onStopEdit();
+    }
+  };
+
+  // EDIT MODE
+  if (isEditing) {
+    return (
+      <div className="p-6 border-2 border-blue-500 bg-blue-50 rounded">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          Edit Questions & Answers
+        </h3>
+
+        <div className="space-y-4 mb-4">
+          {editQuestions.map((question, index) => (
+            <div key={index} className="bg-white p-4 rounded-lg border border-gray-200">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700">Pair {index + 1}</span>
+                {editQuestions.length > 1 && (
+                  <button
+                    onClick={() => handleRemovePair(index)}
+                    className="text-sm text-red-600 hover:text-red-700"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Question</label>
+                  <input
+                    type="text"
+                    value={question}
+                    onChange={(e) => handleQuestionChange(index, e.target.value)}
+                    placeholder="Enter question..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Answer</label>
+                  <input
+                    type="text"
+                    value={editAnswers[index] || ''}
+                    onChange={(e) => handleAnswerChange(index, e.target.value)}
+                    placeholder="Enter answer..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <button
+          onClick={handleAddPair}
+          className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium transition-colors mb-4"
+        >
+          + Add Question/Answer Pair
+        </button>
+
+        <div className="flex gap-2">
+          <button
+            onClick={handleSave}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors"
+          >
+            Save
+          </button>
+          <button
+            onClick={handleCancel}
+            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded text-sm font-medium transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Fullscreen view
   if (isFullscreen) {
@@ -122,22 +273,31 @@ export function QuestionBlock({ block }: QuestionBlockProps) {
     );
   }
 
-  // List view
+  // VIEW MODE - List view
   return (
-    <div className="p-6">
+    <div 
+      className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+      onClick={onStartEdit}
+    >
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-2xl font-bold text-gray-900">
           Questions & Answers
         </h3>
         <div className="flex gap-2">
           <button
-            onClick={revealAll}
+            onClick={(e) => {
+              e.stopPropagation();
+              revealAll();
+            }}
             className="px-3 py-1 text-sm bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
           >
             Reveal All
           </button>
           <button
-            onClick={hideAll}
+            onClick={(e) => {
+              e.stopPropagation();
+              hideAll();
+            }}
             className="px-3 py-1 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors"
           >
             Hide All
@@ -164,7 +324,10 @@ export function QuestionBlock({ block }: QuestionBlockProps) {
                   </div>
                 </div>
                 <button
-                  onClick={() => enterFullscreen(index)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    enterFullscreen(index);
+                  }}
                   className="px-3 py-1 text-sm bg-purple-600 hover:bg-purple-700 text-white rounded transition-colors whitespace-nowrap"
                 >
                   Fullscreen
@@ -178,7 +341,10 @@ export function QuestionBlock({ block }: QuestionBlockProps) {
                 </div>
               ) : (
                 <button
-                  onClick={() => toggleAnswer(index)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleAnswer(index);
+                  }}
                   className="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors"
                 >
                   Reveal Answer
@@ -187,7 +353,10 @@ export function QuestionBlock({ block }: QuestionBlockProps) {
 
               {isRevealed && (
                 <button
-                  onClick={() => toggleAnswer(index)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleAnswer(index);
+                  }}
                   className="mt-2 ml-2 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded text-sm transition-colors"
                 >
                   Hide Answer

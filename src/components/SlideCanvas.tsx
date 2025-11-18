@@ -102,7 +102,18 @@ export function SlideCanvas({
                   onStopEdit={() => setEditingBlockId(null)}
                 />
               )}
-              {block.type === 'question' && <QuestionBlock block={block as any} />}
+              {block.type === 'question' && (
+                <QuestionBlock 
+                  block={block as any}
+                  isEditing={editingBlockId === block.id}
+                  onUpdate={(updatedBlock) => {
+                    onUpdateBlock(updatedBlock);
+                    setEditingBlockId(null);
+                  }}
+                  onStartEdit={() => setEditingBlockId(block.id)}
+                  onStopEdit={() => setEditingBlockId(null)}
+                />
+              )}
               {!['text', 'timer', 'objectives', 'question'].includes(block.type) && (
                 <div className="p-6 text-gray-500">
                   Block type "{block.type}" not yet implemented
