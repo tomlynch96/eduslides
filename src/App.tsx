@@ -99,6 +99,7 @@ function App() {
     };
     setSlides(updatedSlides);
   };
+  
   const handleInsertBlock = (blockType: BlockInstance['type']) => {
     // Create a new block with default values
     const newBlock = getDefaultBlockByType(blockType);
@@ -117,6 +118,17 @@ function App() {
     };
     setSlides(updatedSlides);
   };
+  
+  const handleUpdateBlock = (updatedBlock: BlockInstance) => {
+    // Update in storage
+    saveBlockInstance(updatedBlock);
+    
+    // Update in allBlocks state
+    setAllBlocks(allBlocks.map(block => 
+      block.id === updatedBlock.id ? updatedBlock : block
+    ));
+  };
+  
   const handleDeleteBlock = (blockId: string) => {
     // Remove from storage
     deleteBlockInstance(blockId);
@@ -131,7 +143,7 @@ function App() {
     }));
     setSlides(updatedSlides);
   };
-
+  
   const handleNewSlide = () => {
     const newSlide: SimpleSlide = {
       id: `slide-${Date.now()}`,
@@ -397,6 +409,7 @@ function App() {
             <SlideCanvas
               blocks={currentSlideBlocks}
               onRemoveBlock={handleRemoveFromSlide}
+              onUpdateBlock={handleUpdateBlock}
               lessonObjectives={lessonObjectives}
               completedObjectives={completedObjectives}
               onToggleObjective={handleToggleObjective}

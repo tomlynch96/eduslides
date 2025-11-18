@@ -3,10 +3,12 @@ import { TextBlock } from '../blocks/renderers/TextBlock';
 import { TimerBlock } from '../blocks/renderers/TimerBlock';
 import { ObjectivesBlock } from '../blocks/renderers/ObjectivesBlock';
 import { QuestionBlock } from '../blocks/renderers/QuestionBlock';
+import { useState } from 'react';
 
 interface SlideCanvasProps {
   blocks: BlockInstance[];
   onRemoveBlock: (blockId: string) => void;
+  onUpdateBlock: (updatedBlock: BlockInstance) => void;
   lessonObjectives: Array<{ id: string; text: string }>;
   completedObjectives: string[];
   onToggleObjective: (objectiveId: string) => void;
@@ -14,11 +16,13 @@ interface SlideCanvasProps {
 
 export function SlideCanvas({ 
   blocks, 
-  onRemoveBlock, 
+  onRemoveBlock,
+  onUpdateBlock,
   lessonObjectives, 
   completedObjectives, 
   onToggleObjective 
 }: SlideCanvasProps) {
+  const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
   if (blocks.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-lg border-2 border-dashed border-gray-300 p-12 text-center min-h-[500px] flex items-center justify-center">
@@ -59,7 +63,18 @@ export function SlideCanvas({
               </button>
               
               {/* Render the appropriate block type */}
-              {block.type === 'text' && <TextBlock block={block as any} />}
+              {block.type === 'text' && (
+                <TextBlock 
+                  block={block as any}
+                  isEditing={editingBlockId === block.id}
+                  onUpdate={(updatedBlock) => {
+                    onUpdateBlock(updatedBlock);
+                    setEditingBlockId(null);
+                  }}
+                  onStartEdit={() => setEditingBlockId(block.id)}
+                  onStopEdit={() => setEditingBlockId(null)}
+                />
+              )}
               {block.type === 'timer' && <TimerBlock block={block as any} />}
               {block.type === 'objectives' && (
                 <ObjectivesBlock 
