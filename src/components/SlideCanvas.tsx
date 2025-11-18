@@ -75,13 +75,31 @@ export function SlideCanvas({
                   onStopEdit={() => setEditingBlockId(null)}
                 />
               )}
-              {block.type === 'timer' && <TimerBlock block={block as any} />}
+              {block.type === 'timer' && (
+                <TimerBlock 
+                  block={block as any}
+                  isEditing={editingBlockId === block.id}
+                  onUpdate={(updatedBlock) => {
+                    onUpdateBlock(updatedBlock);
+                    setEditingBlockId(null);
+                  }}
+                  onStartEdit={() => setEditingBlockId(block.id)}
+                  onStopEdit={() => setEditingBlockId(null)}
+                />
+              )}
               {block.type === 'objectives' && (
                 <ObjectivesBlock 
                   block={block as any} 
                   lessonObjectives={lessonObjectives}
                   completedObjectives={completedObjectives}
                   onToggleObjective={onToggleObjective}
+                  isEditing={editingBlockId === block.id}
+                  onUpdate={(updatedBlock) => {
+                    onUpdateBlock(updatedBlock);
+                    setEditingBlockId(null);
+                  }}
+                  onStartEdit={() => setEditingBlockId(block.id)}
+                  onStopEdit={() => setEditingBlockId(null)}
                 />
               )}
               {block.type === 'question' && <QuestionBlock block={block as any} />}
