@@ -71,60 +71,6 @@ export function QuestionBlock({
     }
   };
 
-  // Edit mode handlers
-  const handleAddPair = () => {
-    setEditQuestions([...editQuestions, '']);
-    setEditAnswers([...editAnswers, '']);
-  };
-
-  const handleRemovePair = (index: number) => {
-    if (editQuestions.length > 1) {
-      setEditQuestions(editQuestions.filter((_, i) => i !== index));
-      setEditAnswers(editAnswers.filter((_, i) => i !== index));
-    }
-  };
-
-  const handleQuestionChange = (index: number, value: string) => {
-    const newQuestions = [...editQuestions];
-    newQuestions[index] = value;
-    setEditQuestions(newQuestions);
-  };
-
-  const handleAnswerChange = (index: number, value: string) => {
-    const newAnswers = [...editAnswers];
-    newAnswers[index] = value;
-    setEditAnswers(newAnswers);
-  };
-
-  const handleSave = () => {
-    // Filter out empty pairs
-    const filteredPairs = editQuestions
-      .map((q, i) => ({ question: q.trim(), answer: editAnswers[i]?.trim() || '' }))
-      .filter(pair => pair.question || pair.answer);
-
-    if (filteredPairs.length === 0) {
-      alert('Please add at least one question and answer pair');
-      return;
-    }
-
-    const finalQuestions = filteredPairs.map(p => p.question);
-    const finalAnswers = filteredPairs.map(p => p.answer);
-
-    if (onUpdate) {
-      onUpdate({
-        ...block,
-        content: {
-          questions: finalQuestions,
-          answers: finalAnswers,
-        },
-        updatedAt: new Date().toISOString(),
-      });
-    }
-    if (onStopEdit) {
-      onStopEdit();
-    }
-  };
-
   const handleCancel = () => {
     setEditQuestions(questions.length > 0 ? questions : ['']);
     setEditAnswers(answers.length > 0 ? answers : ['']);
@@ -135,63 +81,109 @@ export function QuestionBlock({
 
   // EDIT MODE
   if (isEditing) {
+    // Convert arrays to text for editing
+    const questionsText = editQuestions.join('\n');
+    const answersText = editAnswers.join('\n');
+
+    const handleQuestionsTextChange = (text: string) => {
+      const lines = text.split('\n');
+      setEditQuestions(lines);
+    };
+
+    const handleAnswersTextChange = (text: string) => {
+      const lines = text.split('\n');
+      setEditAnswers(lines);
+    };
+
+    const handleSaveText = () => {
+      // Filter out empty lines and trim
+      const filteredQuestions = editQuestions
+        .map(q => q.trim())
+        .filter(q => q.length > 0);
+      
+      const filteredAnswers = editAnswers
+        .map(a => a.trim())
+        .filter(a => a.length > 0);
+
+      if (filteredQuestions.length === 0 || filteredAnswers.length === 0) {
+        alert('Please add at least one question and answer');
+        return;
+      }
+
+      if (filteredQuestions.length !== filteredAnswers.length) {
+        alert(`Mismatch: You have ${filteredQuestions.length} questions but ${filteredAnswers.length} answers. They must match!`);
+        return;
+      }
+
+      if (onUpdate) {
+        onUpdate({
+          ...block,
+          content: {
+            questions: filteredQuestions,
+            answers: filteredAnswers,
+          },
+          updatedAt: new Date().toISOString(),
+        });
+      }
+      if (onStopEdit) {
+        onStopEdit();
+      }
+    };
+
     return (
       <div className="p-6 border-2 border-blue-500 bg-blue-50 rounded">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
           Edit Questions & Answers
         </h3>
 
-        <div className="space-y-4 mb-4">
-          {editQuestions.map((question, index) => (
-            <div key={index} className="bg-white p-4 rounded-lg border border-gray-200">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">Pair {index + 1}</span>
-                {editQuestions.length > 1 && (
-                  <button
-                    onClick={() => handleRemovePair(index)}
-                    className="text-sm text-red-600 hover:text-red-700"
-                  >
-                    Remove
-                  </button>
-                )}
-              </div>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Questions (one per line)
+            </label>
+            <textarea
+              value={questionsText}
+              onChange={(e) => handleQuestionsTextChange(e.target.value)}
+              placeholder="Enter questions, one per line:
+What is the speed of light?
+What is Newton's first law?
+Define wavelength."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
+              rows={8}
+              autoFocus
+            />
+            <p className="text-xs text-gray-600 mt-1">
+              {editQuestions.filter(q => q.trim()).length} question(s)
+            </p>
+          </div>
 
-              <div className="space-y-2">
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">Question</label>
-                  <input
-                    type="text"
-                    value={question}
-                    onChange={(e) => handleQuestionChange(index, e.target.value)}
-                    placeholder="Enter question..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">Answer</label>
-                  <input
-                    type="text"
-                    value={editAnswers[index] || ''}
-                    onChange={(e) => handleAnswerChange(index, e.target.value)}
-                    placeholder="Enter answer..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Answers (one per line, matching questions above)
+            </label>
+            <textarea
+              value={answersText}
+              onChange={(e) => handleAnswersTextChange(e.target.value)}
+              placeholder="Enter answers in the same order as questions:
+3 × 10⁸ m/s
+An object at rest stays at rest unless acted upon by force
+The distance between successive wave crests"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
+              rows={8}
+            />
+            <p className="text-xs text-gray-600 mt-1">
+              {editAnswers.filter(a => a.trim()).length} answer(s)
+            </p>
+          </div>
+
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm text-gray-700">
+            <span className="font-bold">Tip:</span> Make sure the number of questions matches the number of answers. Each answer should correspond to the question in the same position.
+          </div>
         </div>
 
-        <button
-          onClick={handleAddPair}
-          className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium transition-colors mb-4"
-        >
-          + Add Question/Answer Pair
-        </button>
-
-        <div className="flex gap-2">
+        <div className="flex gap-2 mt-4">
           <button
-            onClick={handleSave}
+            onClick={handleSaveText}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors"
           >
             Save
