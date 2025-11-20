@@ -143,7 +143,7 @@ function App() {
     }));
     setSlides(updatedSlides);
   };
-  
+
   const handleNewSlide = () => {
     const newSlide: SimpleSlide = {
       id: `slide-${Date.now()}`,
@@ -390,32 +390,14 @@ function App() {
 
       {/* Main Content */}
       <div className="flex-1 max-w-7xl mx-auto px-8 py-6 w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
-          {/* Left Column */}
-          <div className="space-y-6">
-            {/* Block Creator */}
-            <BlockCreator onBlockCreated={handleBlockCreated} />
-            
-            {/* Block Library */}
-            <BlockLibrary
-              blocks={allBlocks}
-              onAddToSlide={handleAddToSlide}
-              onDeleteBlock={handleDeleteBlock}
-            />
-          </div>
-
-          {/* Right Column: Slide Canvas */}
-          <div>
-            <SlideCanvas
-              blocks={currentSlideBlocks}
-              onRemoveBlock={handleRemoveFromSlide}
-              onUpdateBlock={handleUpdateBlock}
-              lessonObjectives={lessonObjectives}
-              completedObjectives={completedObjectives}
-              onToggleObjective={handleToggleObjective}
-            />
-          </div>
-        </div>
+        <SlideCanvas
+          blocks={currentSlideBlocks}
+          onRemoveBlock={handleRemoveFromSlide}
+          onUpdateBlock={handleUpdateBlock}
+          lessonObjectives={lessonObjectives}
+          completedObjectives={completedObjectives}
+          onToggleObjective={handleToggleObjective}
+        />
       </div>
     </div>
   );
