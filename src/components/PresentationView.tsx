@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import type { BlockInstance } from '../types/core';
 import { TextBlock } from '../blocks/renderers/TextBlock';
 import { TimerBlock } from '../blocks/renderers/TimerBlock';
@@ -31,11 +31,54 @@ export function PresentationView({
   completedObjectives,
   onToggleObjective,
 }: PresentationViewProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Enter fullscreen on mount
+  useEffect(() => {
+    const enterFullscreen = async () => {
+      try {
+        if (containerRef.current && document.fullscreenEnabled) {
+          await containerRef.current.requestFullscreen();
+        }
+      } catch (err) {
+        console.error('Error entering fullscreen:', err);
+      }
+    };
+
+    enterFullscreen();
+
+    // Exit fullscreen on unmount
+    return () => {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(err => {
+          console.error('Error exiting fullscreen:', err);
+        });
+      }
+    };
+  }, []);
+
+  // Handle fullscreen change (e.g., user presses ESC)
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement) {
+        // User exited fullscreen (pressed ESC or clicked browser button)
+        onExit();
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, [onExit]);
+
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
         case 'Escape':
+          // Exit fullscreen and presentation mode
+          if (document.fullscreenElement) {
+            document.exitFullscreen();
+          }
           onExit();
           break;
         case 'ArrowRight':
@@ -65,13 +108,20 @@ export function PresentationView({
   const isFirstSlide = currentSlideIndex === 0;
   const isLastSlide = currentSlideIndex === slides.length - 1;
 
+  const handleExit = async () => {
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+    }
+    onExit();
+  };
+
   return (
-    <div className="fixed inset-0 bg-gray-900 z-50 flex flex-col">
+    <div ref={containerRef} className="fixed inset-0 bg-gray-900 z-50 flex flex-col">
       {/* Top bar - subtle controls */}
       <div className="bg-gray-800 text-white px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
-            onClick={onExit}
+            onClick={handleExit}
             className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors text-sm"
           >
             ← Exit Presentation
