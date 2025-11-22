@@ -112,7 +112,24 @@ function App() {
       block.id === updatedBlock.id ? updatedBlock : block
     ));
   };
-
+  const handleChangeLayout = (pattern: number) => {
+    const updatedSlides = [...slides];
+    updatedSlides[currentSlideIndex] = {
+      ...currentSlide,
+      layoutPattern: pattern
+    };
+    setSlides(updatedSlides);
+  };
+  
+  const handleToggleLayoutMode = () => {
+    const updatedSlides = [...slides];
+    updatedSlides[currentSlideIndex] = {
+      ...currentSlide,
+      layout: currentSlide.layout === 'auto' ? 'vertical-stack' : 'auto',
+      layoutPattern: 0  // Reset pattern when switching modes
+    };
+    setSlides(updatedSlides);
+  };
   const handleNewSlide = () => {
     const newSlide: SimpleSlide = {
       id: `slide-${Date.now()}`,
@@ -367,14 +384,18 @@ function App() {
 
       {/* Main Content */}
       <div className="flex-1 max-w-7xl mx-auto px-8 py-6 w-full">
-        <SlideCanvas
-          blocks={currentSlideBlocks}
-          onRemoveBlock={handleRemoveFromSlide}
-          onUpdateBlock={handleUpdateBlock}
-          lessonObjectives={lessonObjectives}
-          completedObjectives={completedObjectives}
-          onToggleObjective={handleToggleObjective}
-        />
+      <SlideCanvas
+        blocks={currentSlideBlocks}
+        onRemoveBlock={handleRemoveFromSlide}
+        onUpdateBlock={handleUpdateBlock}
+        lessonObjectives={lessonObjectives}
+        completedObjectives={completedObjectives}
+        onToggleObjective={handleToggleObjective}
+        layout={currentSlide.layout}
+        layoutPattern={currentSlide.layoutPattern || 0}
+        onChangeLayout={handleChangeLayout}
+        onToggleLayoutMode={handleToggleLayoutMode}
+      />
       </div>
     </div>
   );
