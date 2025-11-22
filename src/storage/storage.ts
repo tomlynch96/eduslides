@@ -146,13 +146,15 @@ export interface SimpleLessonData {
   slides: Array<{
     id: string;
     blockIds: string[];
+    layout?: 'auto' | 'vertical-stack';
+    layoutPattern?: number;
   }>;
   objectives?: Array<{
     id: string;
     text: string;
   }>;
   objectivesState?: {
-    completed: string[];  // IDs of completed objectives
+    completed: string[];
   };
   savedAt: string;
 }

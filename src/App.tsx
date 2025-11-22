@@ -21,10 +21,12 @@ import {
 } from './lessonExport';
 import { saveBlockInstance } from './storage/storage';
 
-// Simple slide type - just tracks which blocks are on it
+// Slide with layout information
 interface SimpleSlide {
   id: string;
   blockIds: string[];
+  layout: 'auto' | 'vertical-stack';  // Layout mode
+  layoutPattern?: number;  // Which pattern variation (for auto mode with multiple options)
 }
 
 function App() {
@@ -33,7 +35,7 @@ function App() {
   
   // All slides in the current lesson
   const [slides, setSlides] = useState<SimpleSlide[]>([
-    { id: 'slide-1', blockIds: [] }
+    { id: 'slide-1', blockIds: [], layout: 'auto', layoutPattern: 0 }
   ]);
   
   // Which slide we're currently viewing/editing
@@ -114,7 +116,9 @@ function App() {
   const handleNewSlide = () => {
     const newSlide: SimpleSlide = {
       id: `slide-${Date.now()}`,
-      blockIds: []
+      blockIds: [],
+      layout: 'auto',
+      layoutPattern: 0
     };
     setSlides([...slides, newSlide]);
     setCurrentSlideIndex(slides.length);
@@ -170,13 +174,10 @@ function App() {
     
     setSlides(lesson.slides.map(slide => ({
       id: slide.id,
-      blockIds: [...slide.blockIds]
+      blockIds: [...slide.blockIds],
+      layout: slide.layout || 'auto',
+      layoutPattern: slide.layoutPattern || 0
     })));
-    setLessonObjectives(lesson.objectives || []);
-    setCompletedObjectives(lesson.objectivesState?.completed || []);
-    setCurrentLessonId(lesson.id);
-    setCurrentSlideIndex(0);
-  };
 
   const handleDeleteLesson = (lessonId: string) => {
     deleteSimpleLesson(lessonId);
@@ -193,7 +194,7 @@ function App() {
 
   const handleNewLesson = () => {
     if (window.confirm('Start a new lesson? Any unsaved changes will be lost.')) {
-      setSlides([{ id: 'slide-1', blockIds: [] }]);
+      setSlides([{ id: 'slide-1', blockIds: [], layout: 'auto', layoutPattern: 0 }]);
       setCurrentSlideIndex(0);
       setCurrentLessonId(null);
       setLessonObjectives([]);
@@ -267,6 +268,8 @@ function App() {
       setSlides(importData.slides.map(slide => ({
         id: slide.id,
         blockIds: [...slide.blockIds],
+        layout: 'auto',
+        layoutPattern: 0
       })));
 
       // Import objectives if present
