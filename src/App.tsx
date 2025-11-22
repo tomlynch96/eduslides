@@ -153,7 +153,9 @@ function App() {
       name,
       slides: slides.map(slide => ({
         id: slide.id,
-        blockIds: [...slide.blockIds]
+        blockIds: [...slide.blockIds],
+        layout: slide.layout,
+        layoutPattern: slide.layoutPattern
       })),
       objectives: lessonObjectives.length > 0 ? lessonObjectives : undefined,
       objectivesState: completedObjectives.length > 0 ? { completed: completedObjectives } : undefined,
@@ -178,7 +180,12 @@ function App() {
       layout: slide.layout || 'auto',
       layoutPattern: slide.layoutPattern || 0
     })));
-
+    setLessonObjectives(lesson.objectives || []);
+    setCompletedObjectives(lesson.objectivesState?.completed || []);
+    setCurrentLessonId(lesson.id);
+    setCurrentSlideIndex(0);
+  };
+  
   const handleDeleteLesson = (lessonId: string) => {
     deleteSimpleLesson(lessonId);
     
