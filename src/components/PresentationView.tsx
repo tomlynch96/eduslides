@@ -4,11 +4,13 @@ import { TextBlock } from '../blocks/renderers/TextBlock';
 import { TimerBlock } from '../blocks/renderers/TimerBlock';
 import { ObjectivesBlock } from '../blocks/renderers/ObjectivesBlock';
 import { QuestionBlock } from '../blocks/renderers/QuestionBlock';
-
+import { getCurrentLayout } from '../utils/layoutEngine';
 interface PresentationViewProps {
   slides: Array<{
     id: string;
     blockIds: string[];
+    layout?: 'auto' | 'vertical-stack';
+    layoutPattern?: number;
   }>;
   allBlocks: BlockInstance[];
   currentSlideIndex: number;
@@ -105,6 +107,14 @@ export function PresentationView({
     .map(id => allBlocks.find(block => block.id === id))
     .filter((block): block is BlockInstance => block !== undefined);
 
+  // Get layout positions
+  const blockIds = currentBlocks.map(b => b.id);
+  const layoutPositions = getCurrentLayout(
+    blockIds, 
+    currentSlide.layout || 'auto', 
+    currentSlide.layoutPattern || 0
+  );
+
   return (
     <div ref={containerRef} className="fixed inset-0 bg-white z-50">
       {/* Just the slides - nothing else */}
@@ -113,27 +123,47 @@ export function PresentationView({
           Empty slide
         </div>
       ) : (
-        <div className="h-full divide-y divide-gray-200">
-          {currentBlocks.map((block) => (
-            <div key={block.id} className="presentation-block">
-              {block.type === 'text' && <TextBlock block={block as any} />}
-              {block.type === 'timer' && <TimerBlock block={block as any} />}
-              {block.type === 'objectives' && (
-                <ObjectivesBlock 
-                  block={block as any}
-                  lessonObjectives={lessonObjectives}
-                  completedObjectives={completedObjectives}
-                  onToggleObjective={onToggleObjective}
-                />
-              )}
-              {block.type === 'question' && <QuestionBlock block={block as any} />}
-              {!['text', 'timer', 'objectives', 'question'].includes(block.type) && (
-                <div className="p-6 text-gray-500">
-                  Block type "{block.type}" not yet implemented
-                </div>
-              )}
-            </div>
-          ))}
+        <div 
+          className="h-full p-8"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(12, 1fr)',
+            gap: '2rem',
+            alignContent: 'center'
+          }}
+        >
+          {currentBlocks.map((block) => {
+            const position = layoutPositions.find(p => p.blockId === block.id);
+            if (!position) return null;
+
+            return (
+              <div
+                key={block.id}
+                className="presentation-block"
+                style={{
+                  gridColumn: `${position.column} / span ${position.columnSpan}`,
+                  gridRow: `${position.row} / span ${position.rowSpan}`,
+                }}
+              >
+                {block.type === 'text' && <TextBlock block={block as any} />}
+                {block.type === 'timer' && <TimerBlock block={block as any} />}
+                {block.type === 'objectives' && (
+                  <ObjectivesBlock 
+                    block={block as any}
+                    lessonObjectives={lessonObjectives}
+                    completedObjectives={completedObjectives}
+                    onToggleObjective={onToggleObjective}
+                  />
+                )}
+                {block.type === 'question' && <QuestionBlock block={block as any} />}
+                {!['text', 'timer', 'objectives', 'question'].includes(block.type) && (
+                  <div className="p-6 text-gray-500">
+                    Block type "{block.type}" not yet implemented
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
