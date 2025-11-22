@@ -1,14 +1,11 @@
 import { useState, useEffect } from 'react';
 import type { BlockInstance } from './types/core';
-import { BlockCreator } from './components/BlockCreator';
-import { BlockLibrary } from './components/BlockLibrary';
 import { SlideCanvas } from './components/SlideCanvas';
 import { PresentationView } from './components/PresentationView';
 import { TopMenuBar } from './components/TopMenuBar';
 import { getDefaultBlockByType } from './blockDefaults';
 import { 
   getAllBlockInstances, 
-  deleteBlockInstance,
   saveSimpleLesson,
   getAllSimpleLessons,
   getSimpleLesson,
@@ -76,21 +73,6 @@ function App() {
     .map(id => allBlocks.find(block => block.id === id))
     .filter((block): block is BlockInstance => block !== undefined);
 
-  const handleBlockCreated = (newBlock: BlockInstance) => {
-    setAllBlocks([...allBlocks, newBlock]);
-  };
-
-  const handleAddToSlide = (blockId: string) => {
-    if (!currentSlide.blockIds.includes(blockId)) {
-      const updatedSlides = [...slides];
-      updatedSlides[currentSlideIndex] = {
-        ...currentSlide,
-        blockIds: [...currentSlide.blockIds, blockId]
-      };
-      setSlides(updatedSlides);
-    }
-  };
-
   const handleRemoveFromSlide = (blockId: string) => {
     const updatedSlides = [...slides];
     updatedSlides[currentSlideIndex] = {
@@ -127,21 +109,6 @@ function App() {
     setAllBlocks(allBlocks.map(block => 
       block.id === updatedBlock.id ? updatedBlock : block
     ));
-  };
-  
-  const handleDeleteBlock = (blockId: string) => {
-    // Remove from storage
-    deleteBlockInstance(blockId);
-    
-    // Remove from all blocks
-    setAllBlocks(allBlocks.filter(block => block.id !== blockId));
-    
-    // Remove from ALL slides that contain it
-    const updatedSlides = slides.map(slide => ({
-      ...slide,
-      blockIds: slide.blockIds.filter(id => id !== blockId)
-    }));
-    setSlides(updatedSlides);
   };
 
   const handleNewSlide = () => {
