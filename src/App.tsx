@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import type { BlockInstance } from './types/core';
+import './block-definitions'; // Initialize block registry
+import { blockRegistry } from './block-registry';
 import { SlideCanvas } from './components/SlideCanvas';
 import { PresentationView } from './components/PresentationView';
 import { TopMenuBar } from './components/TopMenuBar';
-import { getDefaultBlockByType } from './blockDefaults';
 import { 
   getAllBlockInstances, 
   saveSimpleLesson,
@@ -86,8 +87,13 @@ function App() {
   };
   
   const handleInsertBlock = (blockType: BlockInstance['type']) => {
-    // Create a new block with default values
-    const newBlock = getDefaultBlockByType(blockType);
+    // Create a new block using the registry
+    const newBlock = blockRegistry.createDefaultBlock(blockType);
+    
+    if (!newBlock) {
+      console.error(`Failed to create block of type: ${blockType}`);
+      return;
+    }
     
     // Save to storage
     saveBlockInstance(newBlock);
@@ -401,9 +407,6 @@ function App() {
         blocks={currentSlideBlocks}
         onRemoveBlock={handleRemoveFromSlide}
         onUpdateBlock={handleUpdateBlock}
-        lessonObjectives={lessonObjectives}
-        completedObjectives={completedObjectives}
-        onToggleObjective={handleToggleObjective}
         layout={currentSlide.layout}
         layoutPattern={currentSlide.layoutPattern || 0}
         hasTitleZone={currentSlide.hasTitleZone || false}
