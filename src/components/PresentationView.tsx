@@ -1,10 +1,8 @@
 import { useEffect, useRef } from 'react';
 import type { BlockInstance } from '../types/core';
-import { TextBlock } from '../blocks/renderers/TextBlock';
-import { TimerBlock } from '../blocks/renderers/TimerBlock';
-import { ObjectivesBlock } from '../blocks/renderers/ObjectivesBlock';
-import { QuestionBlock } from '../blocks/renderers/QuestionBlock';
+import { UniversalBlockRenderer } from './UniversalBlockRenderer';
 import { getCurrentLayout } from '../utils/layoutEngine';
+
 interface PresentationViewProps {
   slides: Array<{
     id: string;
@@ -30,9 +28,6 @@ export function PresentationView({
   onNextSlide,
   onPreviousSlide,
   onExit,
-  lessonObjectives,
-  completedObjectives,
-  onToggleObjective,
 }: PresentationViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -147,22 +142,10 @@ export function PresentationView({
                   gridRow: `${position.row} / span ${position.rowSpan}`,
                 }}
               >
-                {block.type === 'text' && <TextBlock block={block as any} />}
-                {block.type === 'timer' && <TimerBlock block={block as any} />}
-                {block.type === 'objectives' && (
-                  <ObjectivesBlock 
-                    block={block as any}
-                    lessonObjectives={lessonObjectives}
-                    completedObjectives={completedObjectives}
-                    onToggleObjective={onToggleObjective}
-                  />
-                )}
-                {block.type === 'question' && <QuestionBlock block={block as any} />}
-                {!['text', 'timer', 'objectives', 'question'].includes(block.type) && (
-                  <div className="p-6 text-gray-500">
-                    Block type "{block.type}" not yet implemented
-                  </div>
-                )}
+                <UniversalBlockRenderer
+                  block={block}
+                  isEditable={false}
+                />
               </div>
             );
           })}

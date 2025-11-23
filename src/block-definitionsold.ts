@@ -1,6 +1,7 @@
 // ============================================
 // BLOCK DEFINITIONS - Register All Block Types Here
 // ============================================
+// This is the ONLY file you need to edit to add a new block type
 
 import { blockRegistry, defineBlockType, createBaseBlock } from './block-registry';
 import type { 
@@ -12,13 +13,10 @@ import type {
   ImageBlockInstance
 } from './types/core';
 
-// Import all renderers
+// Import renderers
 import { TextBlockRenderer } from './blocks/renderers/TextBlockRenderer';
-import { TimerBlockRenderer } from './blocks/renderers/TimerBlockRenderer';
-import { ObjectivesBlockRenderer } from './blocks/renderers/ObjectivesBlockRenderer';
-import { QuestionBlockRenderer } from './blocks/renderers/QuestionBlockRenderer';
-import { SequenceBlockRenderer } from './blocks/renderers/SequenceBlockRenderer';
-import { ImageBlockRenderer } from './blocks/renderers/ImageBlockRenderer';
+// Note: We'll import the other renderers after we convert them to the new pattern
+// For now, we'll use placeholders
 
 /**
  * TEXT BLOCK
@@ -79,7 +77,8 @@ blockRegistry.register(
       },
     }),
     
-    component: TimerBlockRenderer,
+    // TODO: Convert TimerBlock to new pattern
+    component: (() => null) as any, // Placeholder
     
     validate: (block) => {
       if (block.content.duration <= 0) {
@@ -114,7 +113,8 @@ blockRegistry.register(
       },
     }),
     
-    component: ObjectivesBlockRenderer,
+    // TODO: Convert ObjectivesBlock to new pattern
+    component: (() => null) as any, // Placeholder
   })
 );
 
@@ -139,17 +139,11 @@ blockRegistry.register(
       },
     }),
     
-    component: QuestionBlockRenderer,
+    // TODO: Convert QuestionBlock to new pattern
+    component: (() => null) as any, // Placeholder
     
     validate: (block) => {
-      const validQuestions = block.content.questions.filter(q => q.trim()).length;
-      const validAnswers = block.content.answers.filter(a => a.trim()).length;
-      
-      if (validQuestions === 0 || validAnswers === 0) {
-        return 'Must have at least one question and answer';
-      }
-      
-      if (validQuestions !== validAnswers) {
+      if (block.content.questions.length !== block.content.answers.length) {
         return 'Each question must have a corresponding answer';
       }
       return null;
@@ -178,7 +172,8 @@ blockRegistry.register(
       },
     }),
     
-    component: SequenceBlockRenderer,
+    // TODO: Convert SequenceBlock to new pattern
+    component: (() => null) as any, // Placeholder
   })
 );
 
@@ -204,7 +199,8 @@ blockRegistry.register(
       },
     }),
     
-    component: ImageBlockRenderer,
+    // TODO: Convert ImageBlock to new pattern
+    component: (() => null) as any, // Placeholder
   })
 );
 
