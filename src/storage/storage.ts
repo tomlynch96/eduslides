@@ -148,6 +148,7 @@ export interface SimpleLessonData {
     blockIds: string[];
     layout?: 'auto' | 'vertical-stack';
     layoutPattern?: number;
+    hasTitleZone?: boolean;  // ADD THIS LINE
   }>;
   objectives?: Array<{
     id: string;

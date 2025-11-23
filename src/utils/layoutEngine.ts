@@ -1,6 +1,7 @@
 /**
  * Layout Engine
  * Automatically calculates optimal layouts for blocks on a slide
+ * Supports optional title zone at the top
  */
 
 export interface LayoutPosition {
@@ -9,6 +10,7 @@ export interface LayoutPosition {
     columnSpan: number;  // How many columns wide (1-12)
     row: number;         // Grid row
     rowSpan: number;     // How many rows tall
+    isTitle?: boolean;   // Whether this is in the title zone
   }
   
   export interface LayoutOption {
@@ -19,19 +21,49 @@ export interface LayoutPosition {
   
   /**
    * Generate all possible layout options for a given number of blocks
+   * @param blockIds - Array of block IDs
+   * @param hasTitleZone - Whether the first block should be treated as a title
    */
-  export function getLayoutOptions(blockIds: string[]): LayoutOption[] {
+  export function getLayoutOptions(blockIds: string[], hasTitleZone: boolean = false): LayoutOption[] {
+    if (hasTitleZone && blockIds.length > 0) {
+      // First block is title, layout the rest
+      const titleId = blockIds[0];
+      const contentIds = blockIds.slice(1);
+      const contentLayouts = getContentLayoutOptions(contentIds);
+      
+      // Add title to each layout option
+      return contentLayouts.map(option => ({
+        ...option,
+        positions: [
+          { blockId: titleId, column: 1, columnSpan: 12, row: 1, rowSpan: 1, isTitle: true },
+          ...option.positions.map(pos => ({ ...pos, row: pos.row + 1 })) // Shift content down
+        ]
+      }));
+    }
+    
+    // No title zone, just layout all blocks
+    return getContentLayoutOptions(blockIds);
+  }
+  
+  /**
+   * Generate layout options for content blocks (non-title)
+   */
+  function getContentLayoutOptions(blockIds: string[]): LayoutOption[] {
     const count = blockIds.length;
   
     switch (count) {
       case 0:
-        return [];
+        return [{
+          name: 'Empty',
+          description: 'No content blocks',
+          positions: []
+        }];
       
       case 1:
         return [
           {
             name: 'Full Width',
-            description: 'Single block fills entire slide',
+            description: 'Single block fills entire area',
             positions: [
               { blockId: blockIds[0], column: 1, columnSpan: 12, row: 1, rowSpan: 1 }
             ]
@@ -156,7 +188,8 @@ export interface LayoutPosition {
   export function getCurrentLayout(
     blockIds: string[],
     layoutMode: 'auto' | 'vertical-stack',
-    layoutPattern: number = 0
+    layoutPattern: number = 0,
+    hasTitleZone: boolean = false
   ): LayoutPosition[] {
     if (layoutMode === 'vertical-stack') {
       // Force vertical stack
@@ -165,12 +198,13 @@ export interface LayoutPosition {
         column: 1,
         columnSpan: 12,
         row: index + 1,
-        rowSpan: 1
+        rowSpan: 1,
+        isTitle: hasTitleZone && index === 0
       }));
     }
   
     // Auto mode - get the selected pattern
-    const options = getLayoutOptions(blockIds);
+    const options = getLayoutOptions(blockIds, hasTitleZone);
     const selectedOption = options[layoutPattern] || options[0];
     
     return selectedOption ? selectedOption.positions : [];

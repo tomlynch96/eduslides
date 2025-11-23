@@ -25,8 +25,9 @@ import { saveBlockInstance } from './storage/storage';
 interface SimpleSlide {
   id: string;
   blockIds: string[];
-  layout: 'auto' | 'vertical-stack';  // Layout mode
-  layoutPattern?: number;  // Which pattern variation (for auto mode with multiple options)
+  layout: 'auto' | 'vertical-stack';
+  layoutPattern?: number;
+  hasTitleZone?: boolean;  // NEW
 }
 
 function App() {
@@ -35,7 +36,7 @@ function App() {
   
   // All slides in the current lesson
   const [slides, setSlides] = useState<SimpleSlide[]>([
-    { id: 'slide-1', blockIds: [], layout: 'auto', layoutPattern: 0 }
+    { id: 'slide-1', blockIds: [], layout: 'auto', layoutPattern: 0, hasTitleZone: false }
   ]);
   
   // Which slide we're currently viewing/editing
@@ -130,12 +131,22 @@ function App() {
     };
     setSlides(updatedSlides);
   };
+  const handleToggleTitleZone = () => {
+    const updatedSlides = [...slides];
+    updatedSlides[currentSlideIndex] = {
+      ...currentSlide,
+      hasTitleZone: !currentSlide.hasTitleZone,
+      layoutPattern: 0  // Reset pattern when toggling title zone
+    };
+    setSlides(updatedSlides);
+  };
   const handleNewSlide = () => {
     const newSlide: SimpleSlide = {
       id: `slide-${Date.now()}`,
       blockIds: [],
       layout: 'auto',
-      layoutPattern: 0
+      layoutPattern: 0,
+      hasTitleZone: false
     };
     setSlides([...slides, newSlide]);
     setCurrentSlideIndex(slides.length);
@@ -172,7 +183,8 @@ function App() {
         id: slide.id,
         blockIds: [...slide.blockIds],
         layout: slide.layout,
-        layoutPattern: slide.layoutPattern
+        layoutPattern: slide.layoutPattern,
+        hasTitleZone: slide.hasTitleZone
       })),
       objectives: lessonObjectives.length > 0 ? lessonObjectives : undefined,
       objectivesState: completedObjectives.length > 0 ? { completed: completedObjectives } : undefined,
@@ -195,7 +207,8 @@ function App() {
       id: slide.id,
       blockIds: [...slide.blockIds],
       layout: slide.layout || 'auto',
-      layoutPattern: slide.layoutPattern || 0
+      layoutPattern: slide.layoutPattern || 0,
+      hasTitleZone: slide.hasTitleZone || false
     })));
     setLessonObjectives(lesson.objectives || []);
     setCompletedObjectives(lesson.objectivesState?.completed || []);
@@ -218,7 +231,7 @@ function App() {
 
   const handleNewLesson = () => {
     if (window.confirm('Start a new lesson? Any unsaved changes will be lost.')) {
-      setSlides([{ id: 'slide-1', blockIds: [], layout: 'auto', layoutPattern: 0 }]);
+      setSlides([{ id: 'slide-1', blockIds: [], layout: 'auto', layoutPattern: 0, hasTitleZone: false }]);
       setCurrentSlideIndex(0);
       setCurrentLessonId(null);
       setLessonObjectives([]);
@@ -393,8 +406,10 @@ function App() {
         onToggleObjective={handleToggleObjective}
         layout={currentSlide.layout}
         layoutPattern={currentSlide.layoutPattern || 0}
+        hasTitleZone={currentSlide.hasTitleZone || false}
         onChangeLayout={handleChangeLayout}
         onToggleLayoutMode={handleToggleLayoutMode}
+        onToggleTitleZone={handleToggleTitleZone}
       />
       </div>
     </div>

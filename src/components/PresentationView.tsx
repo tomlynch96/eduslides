@@ -11,6 +11,7 @@ interface PresentationViewProps {
     blockIds: string[];
     layout?: 'auto' | 'vertical-stack';
     layoutPattern?: number;
+    hasTitleZone?: boolean;
   }>;
   allBlocks: BlockInstance[];
   currentSlideIndex: number;
@@ -112,7 +113,8 @@ export function PresentationView({
   const layoutPositions = getCurrentLayout(
     blockIds, 
     currentSlide.layout || 'auto', 
-    currentSlide.layoutPattern || 0
+    currentSlide.layoutPattern || 0,
+    currentSlide.hasTitleZone || false
   );
 
   return (

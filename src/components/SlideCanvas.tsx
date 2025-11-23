@@ -13,10 +13,12 @@ interface SlideCanvasProps {
   lessonObjectives: Array<{ id: string; text: string }>;
   completedObjectives: string[];
   onToggleObjective: (objectiveId: string) => void;
-  layout: 'auto' | 'vertical-stack';           // NEW
-  layoutPattern: number;                        // NEW
-  onChangeLayout: (pattern: number) => void;    // NEW
-  onToggleLayoutMode: () => void;               // NEW
+  layout: 'auto' | 'vertical-stack';
+  layoutPattern: number;
+  hasTitleZone: boolean;                        // NEW
+  onChangeLayout: (pattern: number) => void;
+  onToggleLayoutMode: () => void;
+  onToggleTitleZone: () => void;                // NEW
 }
 
 export function SlideCanvas({ 
@@ -26,10 +28,12 @@ export function SlideCanvas({
   lessonObjectives, 
   completedObjectives, 
   onToggleObjective,
-  layout,              // NEW
-  layoutPattern,       // NEW
-  onChangeLayout,      // NEW
-  onToggleLayoutMode   // NEW
+  layout,
+  layoutPattern,
+  hasTitleZone,           // NEW
+  onChangeLayout,
+  onToggleLayoutMode,
+  onToggleTitleZone       // NEW
 }: SlideCanvasProps) {
   const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
   if (blocks.length === 0) {
@@ -48,8 +52,8 @@ export function SlideCanvas({
   }
 
   const blockIds = blocks.map(b => b.id);
-  const layoutPositions = getCurrentLayout(blockIds, layout, layoutPattern);
-  const layoutOptions = getLayoutOptions(blockIds);
+  const layoutPositions = getCurrentLayout(blockIds, layout, layoutPattern, hasTitleZone);
+  const layoutOptions = getLayoutOptions(blockIds, hasTitleZone);
 
   return (
     <div className="bg-white rounded-lg shadow-lg border border-gray-200 min-h-[500px]">
@@ -61,6 +65,20 @@ export function SlideCanvas({
         
         {blocks.length > 0 && (
           <div className="flex items-center gap-2">
+            {/* Title Zone toggle */}
+            <button
+              onClick={onToggleTitleZone}
+              className={`px-3 py-1 text-xs rounded transition-colors ${
+                hasTitleZone 
+                  ? 'bg-purple-600 text-white' 
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              {hasTitleZone ? '📋 Has Title' : '📋 Add Title'}
+            </button>
+
+            <span className="text-xs text-gray-300">|</span>
+
             {/* Layout mode toggle */}
             <button
               onClick={onToggleLayoutMode}
