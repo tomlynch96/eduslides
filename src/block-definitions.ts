@@ -9,7 +9,8 @@ import type {
   ObjectivesBlockInstance,
   QuestionBlockInstance,
   SequenceBlockInstance,
-  ImageBlockInstance
+  ImageBlockInstance,
+  ClozeBlockInstance
 } from './types/core';
 
 // Import all renderers
@@ -19,6 +20,7 @@ import { ObjectivesBlockRenderer } from './blocks/renderers/ObjectivesBlockRende
 import { QuestionBlockRenderer } from './blocks/renderers/QuestionBlockRenderer';
 import { SequenceBlockRenderer } from './blocks/renderers/SequenceBlockRenderer';
 import { ImageBlockRenderer } from './blocks/renderers/ImageBlockRenderer';
+import { ClozeBlockRenderer } from './blocks/renderers/ClozeBlockRenderer';
 
 /**
  * TEXT BLOCK
@@ -207,7 +209,38 @@ blockRegistry.register(
     component: ImageBlockRenderer,
   })
 );
-
+/**
+ * CLOZE BLOCK
+ */
+blockRegistry.register(
+  defineBlockType<ClozeBlockInstance>({
+    id: 'cloze',
+    label: 'Cloze (Fill in Blanks)',
+    description: 'Click words to turn them into blanks',
+    icon: '📄',
+    category: 'assessment',
+    keywords: ['fill in the blank', 'gap fill', 'cloze test', 'missing words'],
+    supportsTemplates: true,
+    
+    createDefault: () => ({
+      ...createBaseBlock('cloze'),
+      type: 'cloze' as const,
+      content: {
+        text: '',
+        blankedIndices: [],
+      },
+    }),
+    
+    component: ClozeBlockRenderer,
+    
+    validate: (block) => {
+      if (!block.content.text?.trim()) {
+        return 'Text content cannot be empty';
+      }
+      return null;
+    },
+  })
+);
 /**
  * TO ADD A NEW BLOCK TYPE:
  * 

@@ -116,6 +116,18 @@ export function createDefaultSequenceBlock(): BlockInstance {
     },
   };
 }
+/**
+ * CLOZE BLOCK DEFAULT
+ */
+export function createDefaultClozeBlock(): BlockInstance {
+  return {
+    ...createBaseBlock('cloze'),
+    content: {
+      text: '',
+      blankedIndices: [],
+    },
+  };
+}
 
 /**
  * MASTER LOOKUP: Get default block by type
@@ -134,6 +146,8 @@ export function getDefaultBlockByType(type: BlockInstance['type']): BlockInstanc
       return createDefaultImageBlock();
     case 'sequence':
       return createDefaultSequenceBlock();
+    case 'cloze':  // ADD THIS CASE
+      return createDefaultClozeBlock();
     default:
       // Fallback to text block if unknown type
       console.warn(`Unknown block type: ${type}, defaulting to text block`);
@@ -195,5 +209,12 @@ export const BLOCK_TYPE_METADATA: BlockTypeMetadata[] = [
     description: 'Ordered steps',
     icon: '📋',
     category: 'content',
+  },
+  {
+    type: 'cloze',
+    label: 'Cloze',
+    description: 'Fill in the blanks',
+    icon: '📄',
+    category: 'assessment',
   },
 ];
