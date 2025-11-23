@@ -5,9 +5,10 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { blockRegistry } from '../block-registry';
+import type { BlockTypeName } from '../types/core';
 
 interface InsertBlockMenuProps {
-  onInsertBlock: (blockType: string) => void;
+  onInsertBlock: (blockType: BlockTypeName) => void;
 }
 
 export function InsertBlockMenu({ onInsertBlock }: InsertBlockMenuProps) {

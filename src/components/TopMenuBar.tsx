@@ -4,6 +4,7 @@ import { LoadLessonMenu } from './LoadLessonMenu';
 import { ObjectivesModal } from './ObjectivesModal';
 import { SaveLessonModal } from './SaveLessonModal';
 import type { SimpleLessonData } from '../storage/storage';
+import type { BlockTypeName } from '../types/core';  // ADD THIS LINE
 import type { BlockInstance } from '../types/core';
 import { InsertBlockMenu } from './InsertBlockMenu';
 
@@ -26,7 +27,7 @@ interface TopMenuBarProps {
   onNewSlide: () => void;
   onDeleteSlide: () => void;
   onPresent: () => void;
-  onInsertBlock: (blockType: BlockInstance['type']) => void;
+  onInsertBlock: (blockType: BlockTypeName) => void;  // Change from string
 }
 
 export function TopMenuBar({

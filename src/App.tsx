@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { BlockInstance } from './types/core';
+import type { BlockInstance, BlockTypeName } from './types/core';
 import './block-definitions'; // Initialize block registry
 import { blockRegistry } from './block-registry';
 import { LessonProvider } from './LessonContext';
@@ -87,7 +87,7 @@ function App() {
     setSlides(updatedSlides);
   };
   
-  const handleInsertBlock = (blockType: string) => {
+  const handleInsertBlock = (blockType: BlockTypeName) => {
     console.log('Inserting block type:', blockType);
     
     const blockDef = blockRegistry.get(blockType);
