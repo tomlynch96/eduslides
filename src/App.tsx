@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { BlockInstance } from './types/core';
 import './block-definitions'; // Initialize block registry
 import { blockRegistry } from './block-registry';
+import { LessonProvider } from './LessonContext';
 import { SlideCanvas } from './components/SlideCanvas';
 import { PresentationView } from './components/PresentationView';
 import { TopMenuBar } from './components/TopMenuBar';
@@ -347,18 +348,23 @@ function App() {
 
   // If in presentation mode, show presentation view
   if (isPresentationMode) {
+    // Put debug logs BEFORE the return statement:
+console.log('App.tsx - lessonObjectives:', lessonObjectives);
     return (
-      <PresentationView
-        slides={slides}
-        allBlocks={allBlocks}
-        currentSlideIndex={currentSlideIndex}
-        onNextSlide={handleNextSlide}
-        onPreviousSlide={handlePreviousSlide}
-        onExit={() => setIsPresentationMode(false)}
+      <LessonProvider
         lessonObjectives={lessonObjectives}
         completedObjectives={completedObjectives}
         onToggleObjective={handleToggleObjective}
-      />
+      >
+        <PresentationView
+          slides={slides}
+          allBlocks={allBlocks}
+          currentSlideIndex={currentSlideIndex}
+          onNextSlide={handleNextSlide}
+          onPreviousSlide={handlePreviousSlide}
+          onExit={() => setIsPresentationMode(false)}
+        />
+      </LessonProvider>
     );
   }
 
@@ -403,19 +409,26 @@ function App() {
 
       {/* Main Content */}
       <div className="flex-1 max-w-7xl mx-auto px-8 py-6 w-full">
-      <SlideCanvas
-        blocks={currentSlideBlocks}
-        onRemoveBlock={handleRemoveFromSlide}
-        onUpdateBlock={handleUpdateBlock}
-        layout={currentSlide.layout}
-        layoutPattern={currentSlide.layoutPattern || 0}
-        hasTitleZone={currentSlide.hasTitleZone || false}
-        onChangeLayout={handleChangeLayout}
-        onToggleLayoutMode={handleToggleLayoutMode}
-        onToggleTitleZone={handleToggleTitleZone}
-      />
+        <LessonProvider
+          lessonObjectives={lessonObjectives}
+          completedObjectives={completedObjectives}
+          onToggleObjective={handleToggleObjective}
+        >
+          <SlideCanvas
+            blocks={currentSlideBlocks}
+            onRemoveBlock={handleRemoveFromSlide}
+            onUpdateBlock={handleUpdateBlock}
+            layout={currentSlide.layout}
+            layoutPattern={currentSlide.layoutPattern || 0}
+            hasTitleZone={currentSlide.hasTitleZone || false}
+            onChangeLayout={handleChangeLayout}
+            onToggleLayoutMode={handleToggleLayoutMode}
+            onToggleTitleZone={handleToggleTitleZone}
+          />
+        </LessonProvider>
       </div>
     </div>
+    
   );
 }
 

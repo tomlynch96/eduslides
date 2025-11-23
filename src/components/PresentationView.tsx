@@ -16,9 +16,6 @@ interface PresentationViewProps {
   onNextSlide: () => void;
   onPreviousSlide: () => void;
   onExit: () => void;
-  lessonObjectives: Array<{ id: string; text: string }>;
-  completedObjectives: string[];
-  onToggleObjective: (objectiveId: string) => void;
 }
 
 export function PresentationView({
