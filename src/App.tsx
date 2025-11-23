@@ -87,27 +87,29 @@ function App() {
     setSlides(updatedSlides);
   };
   
-  const handleInsertBlock = (blockType: BlockInstance['type']) => {
-    // Create a new block using the registry
-    const newBlock = blockRegistry.createDefaultBlock(blockType);
+  const handleInsertBlock = (blockType: string) => {
+    console.log('Inserting block type:', blockType);
     
-    if (!newBlock) {
-      console.error(`Failed to create block of type: ${blockType}`);
+    const blockDef = blockRegistry.get(blockType);
+    console.log('Block definition:', blockDef);
+    
+    if (!blockDef) {
+      console.error(`Block type ${blockType} not found in registry`);
       return;
     }
     
-    // Save to storage
+    const newBlock = blockDef.createDefault();
+    console.log('Created block:', newBlock);
+    
     saveBlockInstance(newBlock);
-    
-    // Add to allBlocks state
     setAllBlocks([...allBlocks, newBlock]);
-    
-    // Immediately add to current slide
+    // Add to current slide
     const updatedSlides = [...slides];
     updatedSlides[currentSlideIndex] = {
       ...currentSlide,
-      blockIds: [...currentSlide.blockIds, newBlock.id]
+      blockIds: [...currentSlide.blockIds, newBlock.id],
     };
+    console.log('Updated slides:', updatedSlides);
     setSlides(updatedSlides);
   };
   
