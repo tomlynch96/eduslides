@@ -1,36 +1,27 @@
+// ============================================
+// TIMER BLOCK RENDERER (Registry-Compatible)
+// ============================================
+
 import { useState, useEffect, useRef } from 'react';
+import type { BlockRendererProps } from '../../block-registry';
 import type { TimerBlockInstance } from '../../types/core';
 
-interface TimerBlockProps {
-  block: TimerBlockInstance;
-  isEditing?: boolean;
-  onUpdate?: (updatedBlock: TimerBlockInstance) => void;
-  onStartEdit?: () => void;
-  onStopEdit?: () => void;
-}
-
-export function TimerBlock({ 
+export function TimerBlockRenderer({
   block,
-  isEditing = false,
-  onUpdate,
-  onStartEdit,
-  onStopEdit 
-}: TimerBlockProps) {
+  mode,
+  onContentChange,
+}: BlockRendererProps<TimerBlockInstance>) {
   const { duration, label, autoStart } = block.content;
   
-  // Edit mode state
-  const [editDuration, setEditDuration] = useState(duration);
-  const [editLabel, setEditLabel] = useState(label);
-  const [editAutoStart, setEditAutoStart] = useState(autoStart);
-  
-  // Timer state
+  // Timer state (persists in view mode)
   const [timeRemaining, setTimeRemaining] = useState(duration);
   const [isRunning, setIsRunning] = useState(autoStart || false);
   const [isFinished, setIsFinished] = useState(false);
   const intervalRef = useRef<number | null>(null);
 
+  // Timer logic
   useEffect(() => {
-    if (isRunning && timeRemaining > 0 && !isEditing) {
+    if (isRunning && timeRemaining > 0 && mode === 'view') {
       intervalRef.current = window.setInterval(() => {
         setTimeRemaining((prev) => {
           if (prev <= 1) {
@@ -53,7 +44,7 @@ export function TimerBlock({
         clearInterval(intervalRef.current);
       }
     };
-  }, [isRunning, timeRemaining, isEditing]);
+  }, [isRunning, timeRemaining, mode]);
 
   const handleStart = () => {
     if (timeRemaining > 0) {
@@ -72,44 +63,13 @@ export function TimerBlock({
     setTimeRemaining(duration);
   };
 
-  const handleSave = () => {
-    if (onUpdate) {
-      onUpdate({
-        ...block,
-        content: {
-          duration: editDuration,
-          label: editLabel,
-          autoStart: editAutoStart,
-        },
-        updatedAt: new Date().toISOString(),
-      });
-    }
-    // Reset timer to new duration
-    setTimeRemaining(editDuration);
-    setIsRunning(false);
-    setIsFinished(false);
-    if (onStopEdit) {
-      onStopEdit();
-    }
-  };
-
-  const handleCancel = () => {
-    // Reset to original values
-    setEditDuration(duration);
-    setEditLabel(label);
-    setEditAutoStart(autoStart);
-    if (onStopEdit) {
-      onStopEdit();
-    }
-  };
-
   const minutes = Math.floor(timeRemaining / 60);
   const seconds = timeRemaining % 60;
 
   // EDIT MODE
-  if (isEditing) {
-    const editMinutes = Math.floor(editDuration / 60);
-    const editSeconds = editDuration % 60;
+  if (mode === 'edit') {
+    const editMinutes = Math.floor(duration / 60);
+    const editSeconds = duration % 60;
 
     return (
       <div className="p-6 border-2 border-blue-500 bg-blue-50 rounded">
@@ -120,8 +80,11 @@ export function TimerBlock({
             </label>
             <input
               type="text"
-              value={editLabel}
-              onChange={(e) => setEditLabel(e.target.value)}
+              value={label}
+              onChange={(e) => onContentChange?.({
+                ...block.content,
+                label: e.target.value,
+              })}
               placeholder="e.g., Group Discussion Time"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -139,7 +102,10 @@ export function TimerBlock({
                   value={editMinutes}
                   onChange={(e) => {
                     const mins = parseInt(e.target.value) || 0;
-                    setEditDuration(mins * 60 + editSeconds);
+                    onContentChange?.({
+                      ...block.content,
+                      duration: mins * 60 + editSeconds,
+                    });
                   }}
                   min="0"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -152,7 +118,10 @@ export function TimerBlock({
                   value={editSeconds}
                   onChange={(e) => {
                     const secs = parseInt(e.target.value) || 0;
-                    setEditDuration(editMinutes * 60 + secs);
+                    onContentChange?.({
+                      ...block.content,
+                      duration: editMinutes * 60 + secs,
+                    });
                   }}
                   min="0"
                   max="59"
@@ -161,7 +130,7 @@ export function TimerBlock({
               </div>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Total: {editDuration} seconds
+              Total: {duration} seconds
             </p>
           </div>
 
@@ -169,8 +138,11 @@ export function TimerBlock({
             <input
               type="checkbox"
               id="editAutoStart"
-              checked={editAutoStart}
-              onChange={(e) => setEditAutoStart(e.target.checked)}
+              checked={autoStart}
+              onChange={(e) => onContentChange?.({
+                ...block.content,
+                autoStart: e.target.checked,
+              })}
               className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
             />
             <label htmlFor="editAutoStart" className="text-sm text-gray-700">
@@ -178,31 +150,13 @@ export function TimerBlock({
             </label>
           </div>
         </div>
-
-        <div className="flex gap-2 mt-4">
-          <button
-            onClick={handleSave}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors"
-          >
-            Save
-          </button>
-          <button
-            onClick={handleCancel}
-            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded text-sm font-medium transition-colors"
-          >
-            Cancel
-          </button>
-        </div>
       </div>
     );
   }
 
   // VIEW MODE
   return (
-    <div 
-      className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
-      onClick={onStartEdit}
-    >
+    <div className="p-6">
       {label && (
         <h3 className="text-xl font-semibold text-gray-800 mb-4 text-center">
           {label}

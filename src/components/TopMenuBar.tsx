@@ -4,8 +4,9 @@ import { LoadLessonMenu } from './LoadLessonMenu';
 import { ObjectivesModal } from './ObjectivesModal';
 import { SaveLessonModal } from './SaveLessonModal';
 import type { SimpleLessonData } from '../storage/storage';
-import { BLOCK_TYPE_METADATA } from '../blockDefaults';
+import type { BlockTypeName } from '../types/core';  // ADD THIS LINE
 import type { BlockInstance } from '../types/core';
+import { InsertBlockMenu } from './InsertBlockMenu';
 
 interface TopMenuBarProps {
   currentLessonName: string | null;
@@ -26,7 +27,7 @@ interface TopMenuBarProps {
   onNewSlide: () => void;
   onDeleteSlide: () => void;
   onPresent: () => void;
-  onInsertBlock: (blockType: BlockInstance['type']) => void;
+  onInsertBlock: (blockType: BlockTypeName) => void;  // Change from string
 }
 
 export function TopMenuBar({
@@ -74,10 +75,7 @@ export function TopMenuBar({
     { label: 'Import JSON', onClick: handleImportClick },
   ];
 
-  const insertMenuItems = BLOCK_TYPE_METADATA.map(blockMeta => ({
-    label: `${blockMeta.icon} ${blockMeta.label}`,
-    onClick: () => onInsertBlock(blockMeta.type),
-  }));
+
 
   const isFirstSlide = currentSlideIndex === 0;
   const isLastSlide = currentSlideIndex === totalSlides - 1;
@@ -88,7 +86,7 @@ export function TopMenuBar({
         <div className="px-6 py-2 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FileMenu label="File" items={fileMenuItems} />
-            <FileMenu label="Insert" items={insertMenuItems} />
+            <InsertBlockMenu onInsertBlock={onInsertBlock} />
             <LoadLessonMenu
               savedLessons={savedLessons}
               currentLessonId={currentLessonId}

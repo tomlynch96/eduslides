@@ -16,7 +16,8 @@ export type BlockTypeName =
   | 'objectives'
   | 'sequence'
   | 'image'
-  | 'question';
+  | 'question'
+  | 'cloze';
 
 export interface BlockTypeField {
   name: string;
@@ -97,6 +98,13 @@ export interface QuestionBlockInstance extends BlockInstance {
   content: {
     questions: string[];  // Array of questions
     answers: string[];    // Array of corresponding answers
+  };
+}
+export interface ClozeBlockInstance extends BlockInstance {
+  type: 'cloze';
+  content: {
+    text: string;              // The full text
+    blankedIndices: number[];  // Which word indices are blanked
   };
 }
 // ============================================

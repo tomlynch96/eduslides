@@ -1,55 +1,24 @@
-import { useState } from 'react';
+// ============================================
+// OBJECTIVES BLOCK RENDERER (Registry-Compatible)
+// ============================================
+
+import type { BlockRendererProps } from '../../block-registry';
 import type { ObjectivesBlockInstance } from '../../types/core';
+import { useLessonContext } from '../../LessonContext';
 
-interface ObjectivesBlockProps {
-  block: ObjectivesBlockInstance;
-  lessonObjectives: Array<{ id: string; text: string }>;
-  completedObjectives: string[];
-  onToggleObjective: (objectiveId: string) => void;
-  isEditing?: boolean;
-  onUpdate?: (updatedBlock: ObjectivesBlockInstance) => void;
-  onStartEdit?: () => void;
-  onStopEdit?: () => void;
-}
-
-export function ObjectivesBlock({ 
-  block, 
-  lessonObjectives, 
-  completedObjectives, 
-  onToggleObjective,
-  isEditing = false,
-  onUpdate,
-  onStartEdit,
-  onStopEdit
-}: ObjectivesBlockProps) {
+export function ObjectivesBlockRenderer({
+  block,
+  mode,
+  onContentChange,
+}: BlockRendererProps<ObjectivesBlockInstance>) {
   const { showCheckboxes } = block.content;
-  const [editShowCheckboxes, setEditShowCheckboxes] = useState(showCheckboxes);
+  const { lessonObjectives, completedObjectives, onToggleObjective } = useLessonContext();
 
-  const handleSave = () => {
-    if (onUpdate) {
-      onUpdate({
-        ...block,
-        content: {
-          ...block.content,
-          showCheckboxes: editShowCheckboxes,
-        },
-        updatedAt: new Date().toISOString(),
-      });
-    }
-    if (onStopEdit) {
-      onStopEdit();
-    }
-  };
-
-  const handleCancel = () => {
-    setEditShowCheckboxes(showCheckboxes);
-    if (onStopEdit) {
-      onStopEdit();
-    }
-  };
+  // Add this debug line:
+  console.log('ObjectivesBlock - lessonObjectives:', lessonObjectives);
 
   // EDIT MODE
-  if (isEditing) {
+  if (mode === 'edit') {
     return (
       <div className="p-6 border-2 border-blue-500 bg-blue-50 rounded">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
@@ -70,29 +39,17 @@ export function ObjectivesBlock({
             <input
               type="checkbox"
               id="editShowCheckboxes"
-              checked={editShowCheckboxes}
-              onChange={(e) => setEditShowCheckboxes(e.target.checked)}
+              checked={showCheckboxes}
+              onChange={(e) => onContentChange?.({
+                ...block.content,
+                showCheckboxes: e.target.checked,
+              })}
               className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
             />
             <label htmlFor="editShowCheckboxes" className="text-sm text-gray-700">
               Show interactive checkboxes (allow ticking off during lesson)
             </label>
           </div>
-        </div>
-
-        <div className="flex gap-2 mt-4">
-          <button
-            onClick={handleSave}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors"
-          >
-            Save
-          </button>
-          <button
-            onClick={handleCancel}
-            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded text-sm font-medium transition-colors"
-          >
-            Cancel
-          </button>
         </div>
       </div>
     );
@@ -101,10 +58,7 @@ export function ObjectivesBlock({
   // VIEW MODE
   if (!lessonObjectives || lessonObjectives.length === 0) {
     return (
-      <div 
-        className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
-        onClick={onStartEdit}
-      >
+      <div className="p-6">
         <h3 className="text-2xl font-bold text-gray-900 mb-4">
           Learning Objectives
         </h3>
@@ -122,10 +76,7 @@ export function ObjectivesBlock({
   const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
   return (
-    <div 
-      className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
-      onClick={onStartEdit}
-    >
+    <div className="p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-2xl font-bold text-gray-900">
           Learning Objectives

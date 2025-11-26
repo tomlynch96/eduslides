@@ -1,26 +1,17 @@
+// ============================================
+// QUESTION BLOCK RENDERER (Registry-Compatible)
+// ============================================
+
 import { useState } from 'react';
+import type { BlockRendererProps } from '../../block-registry';
 import type { QuestionBlockInstance } from '../../types/core';
 
-interface QuestionBlockProps {
-  block: QuestionBlockInstance;
-  isEditing?: boolean;
-  onUpdate?: (updatedBlock: QuestionBlockInstance) => void;
-  onStartEdit?: () => void;
-  onStopEdit?: () => void;
-}
-
-export function QuestionBlock({ 
+export function QuestionBlockRenderer({
   block,
-  isEditing = false,
-  onUpdate,
-  onStartEdit,
-  onStopEdit
-}: QuestionBlockProps) {
+  mode,
+  onContentChange,
+}: BlockRendererProps<QuestionBlockInstance>) {
   const { questions, answers } = block.content;
-  
-  // Edit mode state
-  const [editQuestions, setEditQuestions] = useState<string[]>(questions.length > 0 ? questions : ['']);
-  const [editAnswers, setEditAnswers] = useState<string[]>(answers.length > 0 ? answers : ['']);
   
   // View mode state
   const [revealedAnswers, setRevealedAnswers] = useState<Set<number>>(new Set());
@@ -71,63 +62,25 @@ export function QuestionBlock({
     }
   };
 
-  const handleCancel = () => {
-    setEditQuestions(questions.length > 0 ? questions : ['']);
-    setEditAnswers(answers.length > 0 ? answers : ['']);
-    if (onStopEdit) {
-      onStopEdit();
-    }
-  };
-
   // EDIT MODE
-  if (isEditing) {
-    // Convert arrays to text for editing
-    const questionsText = editQuestions.join('\n');
-    const answersText = editAnswers.join('\n');
+  if (mode === 'edit') {
+    const questionsText = questions.join('\n');
+    const answersText = answers.join('\n');
 
     const handleQuestionsTextChange = (text: string) => {
       const lines = text.split('\n');
-      setEditQuestions(lines);
+      onContentChange?.({
+        ...block.content,
+        questions: lines,
+      });
     };
 
     const handleAnswersTextChange = (text: string) => {
       const lines = text.split('\n');
-      setEditAnswers(lines);
-    };
-
-    const handleSaveText = () => {
-      // Filter out empty lines and trim
-      const filteredQuestions = editQuestions
-        .map(q => q.trim())
-        .filter(q => q.length > 0);
-      
-      const filteredAnswers = editAnswers
-        .map(a => a.trim())
-        .filter(a => a.length > 0);
-
-      if (filteredQuestions.length === 0 || filteredAnswers.length === 0) {
-        alert('Please add at least one question and answer');
-        return;
-      }
-
-      if (filteredQuestions.length !== filteredAnswers.length) {
-        alert(`Mismatch: You have ${filteredQuestions.length} questions but ${filteredAnswers.length} answers. They must match!`);
-        return;
-      }
-
-      if (onUpdate) {
-        onUpdate({
-          ...block,
-          content: {
-            questions: filteredQuestions,
-            answers: filteredAnswers,
-          },
-          updatedAt: new Date().toISOString(),
-        });
-      }
-      if (onStopEdit) {
-        onStopEdit();
-      }
+      onContentChange?.({
+        ...block.content,
+        answers: lines,
+      });
     };
 
     return (
@@ -148,12 +101,12 @@ export function QuestionBlock({
 What is the speed of light?
 What is Newton's first law?
 Define wavelength."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
               rows={8}
               autoFocus
             />
-            <p className="text-xs text-gray-600 mt-1">
-              {editQuestions.filter(q => q.trim()).length} question(s)
+            <p className="text-xs text-gray-500 mt-1">
+              {questions.filter(q => q.trim()).length} question(s)
             </p>
           </div>
 
@@ -164,36 +117,24 @@ Define wavelength."
             <textarea
               value={answersText}
               onChange={(e) => handleAnswersTextChange(e.target.value)}
-              placeholder="Enter answers in the same order as questions:
-3 × 10⁸ m/s
-An object at rest stays at rest unless acted upon by force
-The distance between successive wave crests"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
+              placeholder="Enter answers, one per line:
+299,792,458 m/s
+An object at rest stays at rest unless acted upon by a force
+The distance between successive peaks of a wave"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
               rows={8}
             />
-            <p className="text-xs text-gray-600 mt-1">
-              {editAnswers.filter(a => a.trim()).length} answer(s)
+            <p className="text-xs text-gray-500 mt-1">
+              {answers.filter(a => a.trim()).length} answer(s)
             </p>
           </div>
 
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm text-gray-700">
-            <span className="font-bold">Tip:</span> Make sure the number of questions matches the number of answers. Each answer should correspond to the question in the same position.
+          <div className="p-3 bg-yellow-50 border border-yellow-200 rounded">
+            <p className="text-sm text-yellow-800">
+              ⚠️ Make sure you have the same number of questions and answers.
+              Each answer should correspond to the question in the same position.
+            </p>
           </div>
-        </div>
-
-        <div className="flex gap-2 mt-4">
-          <button
-            onClick={handleSaveText}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors"
-          >
-            Save
-          </button>
-          <button
-            onClick={handleCancel}
-            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded text-sm font-medium transition-colors"
-          >
-            Cancel
-          </button>
         </div>
       </div>
     );
@@ -267,10 +208,7 @@ The distance between successive wave crests"
 
   // VIEW MODE - List view
   return (
-    <div 
-      className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
-      onClick={onStartEdit}
-    >
+    <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-2xl font-bold text-gray-900">
           Questions & Answers
