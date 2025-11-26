@@ -17,7 +17,8 @@ export type BlockTypeName =
   | 'sequence'
   | 'image'
   | 'question'
-  | 'cloze';
+  | 'cloze'
+  | 'match';
 
 export interface BlockTypeField {
   name: string;
@@ -105,6 +106,13 @@ export interface ClozeBlockInstance extends BlockInstance {
   content: {
     text: string;              // The full text
     blankedIndices: number[];  // Which word indices are blanked
+  };
+}
+export interface MatchBlockInstance extends BlockInstance {
+  type: 'match';
+  content: {
+    rawInput: string;      // The raw text input with terms and descriptions
+    shuffled?: number[];   // Indices for shuffled descriptions (set on first view)
   };
 }
 // ============================================
