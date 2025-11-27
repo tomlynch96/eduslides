@@ -140,15 +140,134 @@ function App() {
     };
     setSlides(updatedSlides);
   };
-  const handleToggleTitleZone = () => {
-    const updatedSlides = [...slides];
+  // ==============================================================================
+// MODIFIED handleToggleTitleZone FUNCTION
+// ==============================================================================
+// This replaces the existing function in App.tsx
+//
+// Key changes:
+// 1. When enabling title zone (hasTitleZone: false -> true):
+//    - Creates a new text block with title styling
+//    - Inserts it at the BEGINNING of the current slide's blockIds array
+//    - Saves the block to storage and state
+// 
+// 2. When disabling title zone (hasTitleZone: true -> false):
+//    - Removes the first block from the slide (assumed to be the title)
+//    - Optionally: could keep the block but move it to regular content position
+// ==============================================================================
+
+const handleToggleTitleZone = () => {
+  const updatedSlides = [...slides];
+  const currentSlide = slides[currentSlideIndex];
+  const isEnablingTitle = !currentSlide.hasTitleZone;
+
+  if (isEnablingTitle) {
+    // === ENABLING TITLE ZONE ===
+    // Create a new text block with title styling
+    const blockDef = blockRegistry.get('text');
+    if (!blockDef) {
+      console.error('Text block type not found in registry');
+      return;
+    }
+
+    // Create a default text block
+    const newTitleBlock = blockDef.createDefault();
+    
+    // Customize it for title use
+    const titleBlock = {
+      ...newTitleBlock,
+      content: {
+        ...newTitleBlock.content,
+        text: '', // Start empty - user will fill it in
+        fontSize: 'large' as const, // Make it larger for title
+        alignment: 'center' as const, // Center titles by default
+      }
+    };
+
+    // Save to storage
+    saveBlockInstance(titleBlock);
+    
+    // Add to allBlocks state
+    setAllBlocks([...allBlocks, titleBlock]);
+    
+    // Insert at the BEGINNING of the current slide
     updatedSlides[currentSlideIndex] = {
       ...currentSlide,
-      hasTitleZone: !currentSlide.hasTitleZone,
+      hasTitleZone: true,
+      blockIds: [titleBlock.id, ...currentSlide.blockIds], // Prepend title block
       layoutPattern: 0  // Reset pattern when toggling title zone
     };
-    setSlides(updatedSlides);
-  };
+
+  } else {
+    // === DISABLING TITLE ZONE ===
+    // Remove the first block (the title block)
+    const blockIdsWithoutTitle = currentSlide.blockIds.slice(1);
+    
+    updatedSlides[currentSlideIndex] = {
+      ...currentSlide,
+      hasTitleZone: false,
+      blockIds: blockIdsWithoutTitle,
+      layoutPattern: 0  // Reset pattern when toggling title zone
+    };
+  }
+
+  setSlides(updatedSlides);
+};
+
+
+// ==============================================================================
+// ALTERNATIVE: Keep the block when disabling title zone
+// ==============================================================================
+// If you prefer to keep the title block as regular content when disabling
+// the title zone (rather than removing it), use this version instead:
+
+const handleToggleTitleZone_KeepBlock = () => {
+  const updatedSlides = [...slides];
+  const currentSlide = slides[currentSlideIndex];
+  const isEnablingTitle = !currentSlide.hasTitleZone;
+
+  if (isEnablingTitle) {
+    // Same as above - create and add title block
+    const blockDef = blockRegistry.get('text');
+    if (!blockDef) {
+      console.error('Text block type not found in registry');
+      return;
+    }
+
+    const newTitleBlock = blockDef.createDefault();
+    
+    const titleBlock = {
+      ...newTitleBlock,
+      content: {
+        ...newTitleBlock.content,
+        text: '',
+        fontSize: 'large' as const,
+        alignment: 'center' as const,
+      }
+    };
+
+    saveBlockInstance(titleBlock);
+    setAllBlocks([...allBlocks, titleBlock]);
+    
+    updatedSlides[currentSlideIndex] = {
+      ...currentSlide,
+      hasTitleZone: true,
+      blockIds: [titleBlock.id, ...currentSlide.blockIds],
+      layoutPattern: 0
+    };
+
+  } else {
+    // Just toggle the flag - keep all blocks where they are
+    // The first block will now be treated as regular content
+    updatedSlides[currentSlideIndex] = {
+      ...currentSlide,
+      hasTitleZone: false,
+      layoutPattern: 0
+    };
+  }
+
+  setSlides(updatedSlides);
+};
   const handleNewSlide = () => {
     const newSlide: SimpleSlide = {
       id: `slide-${Date.now()}`,
