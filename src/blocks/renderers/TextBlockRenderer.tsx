@@ -27,10 +27,13 @@ export function TextBlockRenderer({
     right: 'text-right',
   };
 
+  // Reduced padding for large text blocks (typically titles)
+  const paddingClass = fontSize === 'large' ? 'p-3' : 'p-6';
+
   // EDIT MODE
   if (mode === 'edit') {
     return (
-      <div className="p-6 border-2 border-blue-500 bg-blue-50 rounded space-y-4">
+      <div className={`${paddingClass} border-2 border-blue-500 bg-blue-50 rounded space-y-4`}>
         <div>
           <label className="block text-xs font-medium text-gray-700 mb-1">
             Text Content
@@ -91,7 +94,7 @@ export function TextBlockRenderer({
 
   // VIEW MODE
   return (
-    <div className={`p-6 ${alignmentClass[alignment]}`}>
+    <div className={`${paddingClass} ${alignmentClass[alignment]}`}>
       {text ? (
         <div className={`${fontSizeClass[fontSize]} text-gray-900 whitespace-pre-wrap`}>
           {text}

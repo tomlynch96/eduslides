@@ -118,7 +118,9 @@ export function SlideCanvas({
                 gridColumn: `${position.column} / span ${position.columnSpan}`,
                 gridRow: `${position.row} / span ${position.rowSpan}`,
               }}
-              className={position.isTitle ? 'border-b-2 border-purple-200 pb-4' : ''}
+              // REMOVED: Purple border and bottom padding
+              // Title blocks now have no special visual styling in canvas view
+              // This makes the canvas view match the presentation view more closely
             >
               <UniversalBlockRenderer
                 block={block}

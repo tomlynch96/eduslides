@@ -123,16 +123,18 @@ export function PresentationView({
             display: 'grid',
             gridTemplateColumns: 'repeat(12, 1fr)',
             gap: '2rem',
-            alignContent: 'center'
+            // REMOVED: alignContent: 'center' - this was centering all content vertically
+            // Now content starts from the top, allowing titles to be at the very top
+            alignContent: 'start'
           }}
         >
-          {currentBlocks.map((block) => {
-            const position = layoutPositions.find(p => p.blockId === block.id);
-            if (!position) return null;
+          {layoutPositions.map((position) => {
+            const block = currentBlocks.find(b => b.id === position.blockId);
+            if (!block) return null;
 
             return (
               <div
-                key={block.id}
+                key={position.blockId}
                 className="presentation-block"
                 style={{
                   gridColumn: `${position.column} / span ${position.columnSpan}`,
