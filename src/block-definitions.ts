@@ -260,7 +260,8 @@ blockRegistry.register(
       ...createBaseBlock('match'),
       type: 'match' as const,
       content: {
-        rawInput: '',
+        terms: [''],
+        descriptions: [''],
         shuffled: undefined,
       },
     }),
@@ -268,31 +269,19 @@ blockRegistry.register(
     component: MatchBlockRenderer,
     
     validate: (block) => {
-      if (!block.content.rawInput?.trim()) {
-        return 'Match content cannot be empty';
-      }
+      const validTerms = block.content.terms.filter(t => t.trim()).length;
+      const validDescriptions = block.content.descriptions.filter(d => d.trim()).length;
       
-      // Parse and validate format
-      const lines = block.content.rawInput.trim().split('\n').filter(line => line.trim());
-      const dividerIndex = lines.findIndex(line => /^[-=]{3,}$/.test(line.trim()));
-      
-      if (dividerIndex === -1) {
-        return 'Match block must include a divider line (---) between terms and descriptions';
-      }
-      
-      const terms = lines.slice(0, dividerIndex);
-      const descriptions = lines.slice(dividerIndex + 1);
-      
-      if (terms.length === 0) {
+      if (validTerms === 0) {
         return 'Match block must have at least one term';
       }
       
-      if (descriptions.length === 0) {
+      if (validDescriptions === 0) {
         return 'Match block must have at least one description';
       }
       
-      if (terms.length !== descriptions.length) {
-        return `Number of terms (${terms.length}) must match number of descriptions (${descriptions.length})`;
+      if (validTerms !== validDescriptions) {
+        return `Number of terms (${validTerms}) must match number of descriptions (${validDescriptions})`;
       }
       
       return null;

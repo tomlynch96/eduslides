@@ -111,8 +111,9 @@ export interface ClozeBlockInstance extends BlockInstance {
 export interface MatchBlockInstance extends BlockInstance {
   type: 'match';
   content: {
-    rawInput: string;      // The raw text input with terms and descriptions
-    shuffled?: number[];   // Indices for shuffled descriptions (set on first view)
+    terms: string[];          // Array of terms
+    descriptions: string[];   // Array of descriptions (same order as terms)
+    shuffled?: number[];      // Indices for shuffled descriptions (set on first view)
   };
 }
 // ============================================
