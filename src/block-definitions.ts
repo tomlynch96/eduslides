@@ -26,14 +26,19 @@ import { MatchBlockRenderer } from './blocks/renderers/MatchBlockRenderer';
 /**
  * TEXT BLOCK
  */
+// ============================================
+// UPDATED TEXT BLOCK DEFINITION
+// ============================================
+// Replace the text block registration in src/block-definitions.ts
+
 blockRegistry.register(
   defineBlockType<TextBlockInstance>({
     id: 'text',
     label: 'Text',
-    description: 'Add text with formatting',
+    description: 'Add text with formatting and colors',
     icon: '📝',
     category: 'content',
-    keywords: ['paragraph', 'writing', 'content', 'note'],
+    keywords: ['paragraph', 'writing', 'content', 'note', 'colored', 'formatted'],
     supportsTemplates: true,
     
     createDefault: () => ({
@@ -43,6 +48,7 @@ blockRegistry.register(
         text: '',
         fontSize: 'medium' as const,
         alignment: 'left' as const,
+        backgroundColor: 'none' as const, // NEW: default to no background
       },
     }),
     

@@ -52,14 +52,62 @@ export interface BlockInstance {
 }
 
 // Specific block instance types
+
+
+// ============================================
+// ENHANCED TEXT BLOCK TYPES
+// ============================================
+// Add these to your existing src/types/core.ts file
+
+// Update the TextBlockInstance interface to include new fields:
+
 export interface TextBlockInstance extends BlockInstance {
   type: 'text';
   content: {
     text: string;
     fontSize: 'small' | 'medium' | 'large';
     alignment: 'left' | 'center' | 'right';
+    backgroundColor?: 'none' | 'warm-yellow' | 'warm-peach' | 'warm-pink' | 'warm-blue' | 'warm-green' | 'warm-purple'; // NEW
+    // Rich text formatting stored as markdown-style markers that we'll parse
+    // This keeps the data as plain text (searchable, templatable) while supporting formatting
   };
 }
+
+// Pastel warm color palette
+export const PASTEL_COLORS = {
+  none: {
+    name: 'None',
+    bg: 'bg-transparent',
+    preview: '#ffffff'
+  },
+  'warm-yellow': {
+    name: 'Warm Yellow',
+    bg: 'bg-amber-50',
+    preview: '#fffbeb'
+  },
+  'warm-pink': {
+    name: 'Warm Pink', 
+    bg: 'bg-rose-50',
+    preview: '#fff1f2'
+  },
+  'warm-blue': {
+    name: 'Warm Blue',
+    bg: 'bg-sky-50', 
+    preview: '#f0f9ff'
+  },
+  'warm-green': {
+    name: 'Warm Green',
+    bg: 'bg-emerald-50',
+    preview: '#ecfdf5'
+  },
+  'warm-purple': {
+    name: 'Warm Purple',
+    bg: 'bg-purple-50',
+    preview: '#faf5ff'
+  }
+} as const;
+
+export type BackgroundColor = keyof typeof PASTEL_COLORS;
 
 export interface TimerBlockInstance extends BlockInstance {
   type: 'timer';
