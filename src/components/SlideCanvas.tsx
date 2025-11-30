@@ -98,6 +98,7 @@ export function SlideCanvas({
       </div>
       
       {/* Fixed 16:9 Canvas Container */}
+      {/* Fixed 16:9 Canvas Container */}
       <div 
         className="relative w-full bg-gray-100"
         style={{
@@ -109,6 +110,7 @@ export function SlideCanvas({
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(12, 1fr)',
+            gridTemplateRows: 'repeat(6, 1fr)',
             gap: '1rem',
             padding: '2rem',
           }}
@@ -123,6 +125,8 @@ export function SlideCanvas({
                 style={{
                   gridColumn: `${position.column} / span ${position.columnSpan}`,
                   gridRow: `${position.row} / span ${position.rowSpan}`,
+                  height: '100%',
+                  overflow: 'hidden'
                 }}
               >
                 <UniversalBlockRenderer

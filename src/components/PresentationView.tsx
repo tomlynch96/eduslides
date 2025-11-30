@@ -125,9 +125,9 @@ export function PresentationView({
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(12, 1fr)',
+              gridTemplateRows: 'repeat(6, 1fr)',
               gap: '2rem',
               padding: '2rem',
-              alignContent: 'start'
             }}
           >
             {layoutPositions.map((position) => {
@@ -141,6 +141,8 @@ export function PresentationView({
                   style={{
                     gridColumn: `${position.column} / span ${position.columnSpan}`,
                     gridRow: `${position.row} / span ${position.rowSpan}`,
+                    height: '100%',
+                    overflow: 'hidden'
                   }}
                 >
                   <UniversalBlockRenderer
