@@ -9,6 +9,8 @@ interface UniversalBlockRendererProps {
   onUpdate?: (block: BlockInstance) => void;
   onRemove?: () => void;
   isEditable: boolean;
+  isFullscreen?: boolean;  // ADD THIS
+  onToggleFullscreen?: () => void;  // ADD THIS
 }
 
 export function UniversalBlockRenderer({
@@ -16,6 +18,8 @@ export function UniversalBlockRenderer({
   onUpdate,
   onRemove,
   isEditable,
+  isFullscreen = false,  // ADD THIS
+  onToggleFullscreen,  // ADD THIS
 }: UniversalBlockRendererProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const blockDef = blockRegistry.get(block.type);
@@ -44,21 +48,39 @@ export function UniversalBlockRenderer({
 
   
   // Always render in VIEW mode with scaling
+  // Always render in VIEW mode with scaling
   return (
     <>
       <div 
         className={`relative h-full w-full group ${isEditable ? 'cursor-pointer hover:ring-2 hover:ring-blue-400 rounded transition-all' : ''}`}
         onClick={() => isEditable && setIsEditModalOpen(true)}
       >
-        <ScalingBlockWrapper>
+        <ScalingBlockWrapper disabled={block.type === 'match'}>
           <Component
             block={block}
             mode="view"
             onContentChange={handleContentChange}
+            isFullscreen={isFullscreen}  // ADD THIS - pass to block
           />
         </ScalingBlockWrapper>
         
-        {isEditable && onRemove && (
+        {/* Fullscreen button - shows on hover */}
+        {/* Fullscreen button - shows on hover */}
+        {onToggleFullscreen && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFullscreen();
+            }}
+            className="absolute top-2 left-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs shadow-lg z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+            title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+          >
+            {isFullscreen ? '↙' : '↗'}
+          </button>
+        )}
+        
+        {/* Remove button */}
+        {isEditable && onRemove && !isFullscreen && (
           <button
             onClick={(e) => {
               e.stopPropagation();

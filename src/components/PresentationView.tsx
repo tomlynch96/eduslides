@@ -16,6 +16,8 @@ interface PresentationViewProps {
   onNextSlide: () => void;
   onPreviousSlide: () => void;
   onExit: () => void;
+  fullscreenBlockId: string | null;
+  onToggleBlockFullscreen: (blockId: string) => void;
 }
 
 export function PresentationView({
@@ -25,10 +27,11 @@ export function PresentationView({
   onNextSlide,
   onPreviousSlide,
   onExit,
+  fullscreenBlockId,
+  onToggleBlockFullscreen,
 }: PresentationViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Enter fullscreen on mount
   // Enter fullscreen on mount
   useEffect(() => {
     const enterFullscreen = async () => {
@@ -38,7 +41,6 @@ export function PresentationView({
         }
       } catch (err) {
         // Silently fail - browser blocked auto-fullscreen, that's okay
-        // User can manually enter fullscreen with F11 or browser controls
       }
     };
 
@@ -58,7 +60,6 @@ export function PresentationView({
   useEffect(() => {
     const handleFullscreenChange = () => {
       if (!document.fullscreenElement) {
-        // User exited fullscreen (pressed ESC or clicked browser button)
         onExit();
       }
     };
@@ -72,7 +73,6 @@ export function PresentationView({
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
         case 'Escape':
-          // Exit fullscreen and presentation mode
           if (document.fullscreenElement) {
             document.exitFullscreen();
           }
@@ -104,26 +104,36 @@ export function PresentationView({
 
   // Get layout positions
   const blockIds = currentBlocks.map(b => b.id);
-  const layoutPositions = getCurrentLayout(
-    blockIds, 
-    currentSlide.layout || 'auto', 
-    currentSlide.layoutPattern || 0,
-    currentSlide.hasTitleZone || false
-  );
+  
+  // If a block is fullscreened, only show that block at full size
+  const displayBlocks = fullscreenBlockId 
+    ? currentBlocks.filter(b => b.id === fullscreenBlockId)
+    : currentBlocks;
+  
+  const layoutPositions = fullscreenBlockId
+    ? [{ blockId: fullscreenBlockId, column: 1, columnSpan: 12, row: 1, rowSpan: 6 }]
+    : getCurrentLayout(
+        blockIds, 
+        currentSlide.layout || 'auto', 
+        currentSlide.layoutPattern || 0,
+        currentSlide.hasTitleZone || false
+      );
 
   return (
-    <div ref={containerRef} className="fixed inset-0 bg-black z-40 flex items-center justify-center">
-      {/* 16:9 Container centered in fullscreen */}
-      <div 
-        className="relative w-full h-full max-w-[177.78vh] max-h-[56.25vw] bg-white"
-      >
-        {currentBlocks.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-gray-400 text-4xl">
-            Empty slide
-          </div>
-        ) : (
+    <div ref={containerRef} className="fixed inset-0 bg-white z-50">
+      {currentBlocks.length === 0 ? (
+        <div className="flex items-center justify-center h-full text-gray-400 text-4xl">
+          Empty slide
+        </div>
+      ) : (
+        <div 
+          className="relative w-full bg-gray-100"
+          style={{
+            paddingBottom: '56.25%',
+          }}
+        >
           <div 
-            className="h-full w-full"
+            className="absolute inset-0 bg-white"
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(12, 1fr)',
@@ -133,7 +143,7 @@ export function PresentationView({
             }}
           >
             {layoutPositions.map((position) => {
-              const block = currentBlocks.find(b => b.id === position.blockId);
+              const block = displayBlocks.find(b => b.id === position.blockId);
               if (!block) return null;
 
               return (
@@ -150,13 +160,15 @@ export function PresentationView({
                   <UniversalBlockRenderer
                     block={block}
                     isEditable={false}
+                    isFullscreen={fullscreenBlockId === block.id}
+                    onToggleFullscreen={() => onToggleBlockFullscreen(block.id)}
                   />
                 </div>
               );
             })}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

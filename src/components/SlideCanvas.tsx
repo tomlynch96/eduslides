@@ -12,6 +12,8 @@ interface SlideCanvasProps {
   onChangeLayout: (pattern: number) => void;
   onToggleLayoutMode: () => void;
   onToggleTitleZone: () => void;
+  fullscreenBlockId: string | null;  
+  onToggleBlockFullscreen: (blockId: string) => void; 
 }
 
 export function SlideCanvas({ 
@@ -23,7 +25,9 @@ export function SlideCanvas({
   hasTitleZone,
   onChangeLayout,
   onToggleLayoutMode,
-  onToggleTitleZone
+  onToggleTitleZone,
+  fullscreenBlockId,  
+  onToggleBlockFullscreen
 }: SlideCanvasProps) {
   if (blocks.length === 0) {
     return (
@@ -41,7 +45,16 @@ export function SlideCanvas({
   }
 
   const blockIds = blocks.map(b => b.id);
-  const layoutPositions = getCurrentLayout(blockIds, layout, layoutPattern, hasTitleZone);
+  
+  // If a block is fullscreened, only show that block at full size
+  const displayBlocks = fullscreenBlockId 
+    ? blocks.filter(b => b.id === fullscreenBlockId)
+    : blocks;
+  
+  const layoutPositions = fullscreenBlockId
+    ? [{ blockId: fullscreenBlockId, column: 1, columnSpan: 12, row: 1, rowSpan: 6 }]
+    : getCurrentLayout(blockIds, layout, layoutPattern, hasTitleZone);
+  
   const layoutOptions = getLayoutOptions(blockIds, hasTitleZone);
 
   return (
@@ -102,7 +115,7 @@ export function SlideCanvas({
       <div 
         className="relative w-full bg-gray-100"
         style={{
-          paddingBottom: '56.25%', // 16:9 aspect ratio (9/16 * 100)
+          paddingBottom: '56.25%',
         }}
       >
         <div 
@@ -116,17 +129,17 @@ export function SlideCanvas({
           }}
         >
           {layoutPositions.map((position) => {
-            const block = blocks.find(b => b.id === position.blockId);
+            const block = displayBlocks.find(b => b.id === position.blockId);
             if (!block) return null;
 
             return (
               <div
                 key={position.blockId}
+                className="overflow-hidden"
                 style={{
                   gridColumn: `${position.column} / span ${position.columnSpan}`,
                   gridRow: `${position.row} / span ${position.rowSpan}`,
                   height: '100%',
-                  overflow: 'hidden'
                 }}
               >
                 <UniversalBlockRenderer
@@ -134,6 +147,8 @@ export function SlideCanvas({
                   onUpdate={onUpdateBlock}
                   onRemove={() => onRemoveBlock(block.id)}
                   isEditable={true}
+                  isFullscreen={fullscreenBlockId === block.id}
+                  onToggleFullscreen={() => onToggleBlockFullscreen(block.id)}
                 />
               </div>
             );

@@ -4,18 +4,25 @@ interface ScalingBlockWrapperProps {
   children: React.ReactNode;
   minScale?: number;
   maxScale?: number;
+  disabled?: boolean;
 }
 
 export function ScalingBlockWrapper({ 
   children, 
   minScale = 0.3,
-  maxScale = 1 
+  maxScale = 1,
+  disabled = false
 }: ScalingBlockWrapperProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
 
   useEffect(() => {
+    if (disabled) {
+      setScale(1);
+      return;
+    }
+
     const calculateScale = () => {
       if (!containerRef.current || !contentRef.current) return;
 
@@ -27,21 +34,17 @@ export function ScalingBlockWrapper({
       const contentWidth = content.scrollWidth;
       const contentHeight = content.scrollHeight;
 
-      // Calculate scale to fit both width and height
       const scaleX = containerWidth / contentWidth;
       const scaleY = containerHeight / contentHeight;
       const newScale = Math.min(scaleX, scaleY, maxScale);
 
-      // Apply min/max constraints
       const constrainedScale = Math.max(minScale, Math.min(maxScale, newScale));
       
       setScale(constrainedScale);
     };
 
-    // Calculate on mount and when content changes
     calculateScale();
 
-    // Use MutationObserver to detect content changes (like "well done" messages)
     const mutationObserver = new MutationObserver(calculateScale);
     if (contentRef.current) {
       mutationObserver.observe(contentRef.current, {
@@ -52,7 +55,6 @@ export function ScalingBlockWrapper({
       });
     }
 
-    // Recalculate on window resize
     const resizeObserver = new ResizeObserver(calculateScale);
     if (containerRef.current) {
       resizeObserver.observe(containerRef.current);
@@ -62,7 +64,7 @@ export function ScalingBlockWrapper({
       resizeObserver.disconnect();
       mutationObserver.disconnect();
     };
-  }, [children, minScale, maxScale]);
+  }, [children, minScale, maxScale, disabled]);
 
   return (
     <div 

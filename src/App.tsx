@@ -44,6 +44,9 @@ function App() {
   // Which slide we're currently viewing/editing
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   
+  // Fullscreen block tracking
+  const [fullscreenBlockId, setFullscreenBlockId] = useState<string | null>(null);
+  
   // Current lesson ID (null if unsaved)
   const [currentLessonId, setCurrentLessonId] = useState<string | null>(null);
   
@@ -87,6 +90,9 @@ function App() {
     setSlides(updatedSlides);
   };
   
+  const handleToggleBlockFullscreen = (blockId: string) => {
+    setFullscreenBlockId(fullscreenBlockId === blockId ? null : blockId);
+  };
   const handleInsertBlock = (blockType: BlockTypeName) => {
     console.log('Inserting block type:', blockType);
     
@@ -484,6 +490,8 @@ console.log('App.tsx - lessonObjectives:', lessonObjectives);
           onNextSlide={handleNextSlide}
           onPreviousSlide={handlePreviousSlide}
           onExit={() => setIsPresentationMode(false)}
+          fullscreenBlockId={fullscreenBlockId}
+          onToggleBlockFullscreen={handleToggleBlockFullscreen}
         />
       </LessonProvider>
     );
@@ -545,6 +553,8 @@ console.log('App.tsx - lessonObjectives:', lessonObjectives);
             onChangeLayout={handleChangeLayout}
             onToggleLayoutMode={handleToggleLayoutMode}
             onToggleTitleZone={handleToggleTitleZone}
+            fullscreenBlockId={fullscreenBlockId}
+            onToggleBlockFullscreen={handleToggleBlockFullscreen}
           />
         </LessonProvider>
       </div>
