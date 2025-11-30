@@ -54,7 +54,15 @@ export function QuestionBlockRenderer({
       setShowAnswerInFullscreen(false);
     }
   };
-
+  // Which slide we're currently viewing/editing
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  
+  // ADD THIS - Fullscreen block tracking
+  const [fullscreenBlockId, setFullscreenBlockId] = useState<string | null>(null);
+  
+  // Current lesson ID (null if unsaved)
+  const [currentLessonId, setCurrentLessonId] = useState<string | null>(null);
+  
   const previousQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
@@ -103,6 +111,10 @@ export function QuestionBlockRenderer({
         ...block.content,
         questions: lines,
       });
+    };
+    
+    const handleToggleBlockFullscreen = (blockId: string) => {
+      setFullscreenBlockId(fullscreenBlockId === blockId ? null : blockId);
     };
 
     const handleAnswersTextChange = (text: string) => {

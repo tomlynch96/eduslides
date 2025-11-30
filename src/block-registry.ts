@@ -12,6 +12,7 @@ export interface BlockRendererProps<T extends BlockInstance = BlockInstance> {
   block: T;
   mode: 'view' | 'edit';
   onContentChange?: (content: T['content']) => void;
+  isFullscreen?: boolean;  // ADD THIS
 }
 
 /**
