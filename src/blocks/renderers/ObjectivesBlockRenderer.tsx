@@ -119,6 +119,7 @@ export function ObjectivesBlockRenderer({
                     onToggleObjective(objective.id);
                   }}
                   className="mt-1 w-5 h-5 text-green-600 rounded focus:ring-2 focus:ring-green-500 cursor-pointer"
+                  onClick={(e) => e.stopPropagation()} 
                 />
               ) : (
                 <span className="mt-1 text-blue-600 font-bold">•</span>

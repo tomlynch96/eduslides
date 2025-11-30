@@ -29,6 +29,7 @@ export function PresentationView({
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Enter fullscreen on mount
+  // Enter fullscreen on mount
   useEffect(() => {
     const enterFullscreen = async () => {
       try {
@@ -36,7 +37,8 @@ export function PresentationView({
           await containerRef.current.requestFullscreen();
         }
       } catch (err) {
-        console.error('Error entering fullscreen:', err);
+        // Silently fail - browser blocked auto-fullscreen, that's okay
+        // User can manually enter fullscreen with F11 or browser controls
       }
     };
 
@@ -46,7 +48,7 @@ export function PresentationView({
     return () => {
       if (document.fullscreenElement) {
         document.exitFullscreen().catch(err => {
-          console.error('Error exiting fullscreen:', err);
+          // Silent fail on exit too
         });
       }
     };
@@ -110,7 +112,7 @@ export function PresentationView({
   );
 
   return (
-    <div ref={containerRef} className="fixed inset-0 bg-black z-50 flex items-center justify-center">
+    <div ref={containerRef} className="fixed inset-0 bg-black z-40 flex items-center justify-center">
       {/* 16:9 Container centered in fullscreen */}
       <div 
         className="relative w-full h-full max-w-[177.78vh] max-h-[56.25vw] bg-white"
