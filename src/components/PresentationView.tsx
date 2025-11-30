@@ -110,46 +110,49 @@ export function PresentationView({
   );
 
   return (
-    <div ref={containerRef} className="fixed inset-0 bg-white z-50">
-      {/* Just the slides - nothing else */}
-      {currentBlocks.length === 0 ? (
-        <div className="flex items-center justify-center h-full text-gray-400 text-4xl">
-          Empty slide
-        </div>
-      ) : (
-        <div 
-          className="h-full p-8"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(12, 1fr)',
-            gap: '2rem',
-            // REMOVED: alignContent: 'center' - this was centering all content vertically
-            // Now content starts from the top, allowing titles to be at the very top
-            alignContent: 'start'
-          }}
-        >
-          {layoutPositions.map((position) => {
-            const block = currentBlocks.find(b => b.id === position.blockId);
-            if (!block) return null;
+    <div ref={containerRef} className="fixed inset-0 bg-black z-50 flex items-center justify-center">
+      {/* 16:9 Container centered in fullscreen */}
+      <div 
+        className="relative w-full h-full max-w-[177.78vh] max-h-[56.25vw] bg-white"
+      >
+        {currentBlocks.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-gray-400 text-4xl">
+            Empty slide
+          </div>
+        ) : (
+          <div 
+            className="h-full w-full"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(12, 1fr)',
+              gap: '2rem',
+              padding: '2rem',
+              alignContent: 'start'
+            }}
+          >
+            {layoutPositions.map((position) => {
+              const block = currentBlocks.find(b => b.id === position.blockId);
+              if (!block) return null;
 
-            return (
-              <div
-                key={position.blockId}
-                className="presentation-block"
-                style={{
-                  gridColumn: `${position.column} / span ${position.columnSpan}`,
-                  gridRow: `${position.row} / span ${position.rowSpan}`,
-                }}
-              >
-                <UniversalBlockRenderer
-                  block={block}
-                  isEditable={false}
-                />
-              </div>
-            );
-          })}
-        </div>
-      )}
+              return (
+                <div
+                  key={position.blockId}
+                  className="presentation-block"
+                  style={{
+                    gridColumn: `${position.column} / span ${position.columnSpan}`,
+                    gridRow: `${position.row} / span ${position.rowSpan}`,
+                  }}
+                >
+                  <UniversalBlockRenderer
+                    block={block}
+                    isEditable={false}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

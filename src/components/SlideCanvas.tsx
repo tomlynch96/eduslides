@@ -45,7 +45,7 @@ export function SlideCanvas({
   const layoutOptions = getLayoutOptions(blockIds, hasTitleZone);
 
   return (
-    <div className="bg-white rounded-lg shadow-lg border border-gray-200 min-h-[500px]">
+    <div className="bg-white rounded-lg shadow-lg border border-gray-200">
       {/* Header with layout controls */}
       <div className="p-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
         <h3 className="text-sm font-medium text-gray-700">
@@ -97,40 +97,44 @@ export function SlideCanvas({
         </div>
       </div>
       
-      {/* Canvas content - using grid layout */}
+      {/* Fixed 16:9 Canvas Container */}
       <div 
-        className="p-6"
+        className="relative w-full bg-gray-100"
         style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(12, 1fr)',
-          gap: '1rem',
-          minHeight: '500px'
+          paddingBottom: '56.25%', // 16:9 aspect ratio (9/16 * 100)
         }}
       >
-        {layoutPositions.map((position) => {
-          const block = blocks.find(b => b.id === position.blockId);
-          if (!block) return null;
+        <div 
+          className="absolute inset-0 bg-white"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(12, 1fr)',
+            gap: '1rem',
+            padding: '2rem',
+          }}
+        >
+          {layoutPositions.map((position) => {
+            const block = blocks.find(b => b.id === position.blockId);
+            if (!block) return null;
 
-          return (
-            <div
-              key={position.blockId}
-              style={{
-                gridColumn: `${position.column} / span ${position.columnSpan}`,
-                gridRow: `${position.row} / span ${position.rowSpan}`,
-              }}
-              // REMOVED: Purple border and bottom padding
-              // Title blocks now have no special visual styling in canvas view
-              // This makes the canvas view match the presentation view more closely
-            >
-              <UniversalBlockRenderer
-                block={block}
-                onUpdate={onUpdateBlock}
-                onRemove={() => onRemoveBlock(block.id)}
-                isEditable={true}
-              />
-            </div>
-          );
-        })}
+            return (
+              <div
+                key={position.blockId}
+                style={{
+                  gridColumn: `${position.column} / span ${position.columnSpan}`,
+                  gridRow: `${position.row} / span ${position.rowSpan}`,
+                }}
+              >
+                <UniversalBlockRenderer
+                  block={block}
+                  onUpdate={onUpdateBlock}
+                  onRemove={() => onRemoveBlock(block.id)}
+                  isEditable={true}
+                />
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
