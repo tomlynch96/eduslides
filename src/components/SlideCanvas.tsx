@@ -12,6 +12,8 @@ interface SlideCanvasProps {
   onChangeLayout: (pattern: number) => void;
   onToggleLayoutMode: () => void;
   onToggleTitleZone: () => void;
+  fullscreenBlockId: string | null;  
+  onToggleBlockFullscreen: (blockId: string) => void; 
 }
 
 export function SlideCanvas({ 
@@ -23,7 +25,9 @@ export function SlideCanvas({
   hasTitleZone,
   onChangeLayout,
   onToggleLayoutMode,
-  onToggleTitleZone
+  onToggleTitleZone,
+  fullscreenBlockId,  
+  onToggleBlockFullscreen
 }: SlideCanvasProps) {
   if (blocks.length === 0) {
     return (
@@ -41,11 +45,20 @@ export function SlideCanvas({
   }
 
   const blockIds = blocks.map(b => b.id);
-  const layoutPositions = getCurrentLayout(blockIds, layout, layoutPattern, hasTitleZone);
+  
+  // If a block is fullscreened, only show that block at full size
+  const displayBlocks = fullscreenBlockId 
+    ? blocks.filter(b => b.id === fullscreenBlockId)
+    : blocks;
+  
+  const layoutPositions = fullscreenBlockId
+    ? [{ blockId: fullscreenBlockId, column: 1, columnSpan: 12, row: 1, rowSpan: 6 }]
+    : getCurrentLayout(blockIds, layout, layoutPattern, hasTitleZone);
+  
   const layoutOptions = getLayoutOptions(blockIds, hasTitleZone);
 
   return (
-    <div className="bg-white rounded-lg shadow-lg border border-gray-200 min-h-[500px]">
+    <div className="bg-white rounded-lg shadow-lg border border-gray-200">
       {/* Header with layout controls */}
       <div className="p-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
         <h3 className="text-sm font-medium text-gray-700">
@@ -97,40 +110,50 @@ export function SlideCanvas({
         </div>
       </div>
       
-      {/* Canvas content - using grid layout */}
+      {/* Fixed 16:9 Canvas Container */}
+      {/* Fixed 16:9 Canvas Container */}
       <div 
-        className="p-6"
+        className="relative w-full bg-gray-100"
         style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(12, 1fr)',
-          gap: '1rem',
-          minHeight: '500px'
+          paddingBottom: '56.25%',
         }}
       >
-        {layoutPositions.map((position) => {
-          const block = blocks.find(b => b.id === position.blockId);
-          if (!block) return null;
+        <div 
+          className="absolute inset-0 bg-white"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(12, 1fr)',
+            gridTemplateRows: 'repeat(6, 1fr)',
+            gap: '1rem',
+            padding: '2rem',
+          }}
+        >
+          {layoutPositions.map((position) => {
+            const block = displayBlocks.find(b => b.id === position.blockId);
+            if (!block) return null;
 
-          return (
-            <div
-              key={position.blockId}
-              style={{
-                gridColumn: `${position.column} / span ${position.columnSpan}`,
-                gridRow: `${position.row} / span ${position.rowSpan}`,
-              }}
-              // REMOVED: Purple border and bottom padding
-              // Title blocks now have no special visual styling in canvas view
-              // This makes the canvas view match the presentation view more closely
-            >
-              <UniversalBlockRenderer
-                block={block}
-                onUpdate={onUpdateBlock}
-                onRemove={() => onRemoveBlock(block.id)}
-                isEditable={true}
-              />
-            </div>
-          );
-        })}
+            return (
+              <div
+                key={position.blockId}
+                className="overflow-hidden"
+                style={{
+                  gridColumn: `${position.column} / span ${position.columnSpan}`,
+                  gridRow: `${position.row} / span ${position.rowSpan}`,
+                  height: '100%',
+                }}
+              >
+                <UniversalBlockRenderer
+                  block={block}
+                  onUpdate={onUpdateBlock}
+                  onRemove={() => onRemoveBlock(block.id)}
+                  isEditable={true}
+                  isFullscreen={fullscreenBlockId === block.id}
+                  onToggleFullscreen={() => onToggleBlockFullscreen(block.id)}
+                />
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

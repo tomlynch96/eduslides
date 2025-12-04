@@ -16,6 +16,8 @@ interface PresentationViewProps {
   onNextSlide: () => void;
   onPreviousSlide: () => void;
   onExit: () => void;
+  fullscreenBlockId: string | null;
+  onToggleBlockFullscreen: (blockId: string) => void;
 }
 
 export function PresentationView({
@@ -25,6 +27,8 @@ export function PresentationView({
   onNextSlide,
   onPreviousSlide,
   onExit,
+  fullscreenBlockId,
+  onToggleBlockFullscreen,
 }: PresentationViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -36,7 +40,7 @@ export function PresentationView({
           await containerRef.current.requestFullscreen();
         }
       } catch (err) {
-        console.error('Error entering fullscreen:', err);
+        // Silently fail - browser blocked auto-fullscreen, that's okay
       }
     };
 
@@ -46,7 +50,7 @@ export function PresentationView({
     return () => {
       if (document.fullscreenElement) {
         document.exitFullscreen().catch(err => {
-          console.error('Error exiting fullscreen:', err);
+          // Silent fail on exit too
         });
       }
     };
@@ -56,7 +60,6 @@ export function PresentationView({
   useEffect(() => {
     const handleFullscreenChange = () => {
       if (!document.fullscreenElement) {
-        // User exited fullscreen (pressed ESC or clicked browser button)
         onExit();
       }
     };
@@ -70,7 +73,6 @@ export function PresentationView({
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
         case 'Escape':
-          // Exit fullscreen and presentation mode
           if (document.fullscreenElement) {
             document.exitFullscreen();
           }
@@ -102,52 +104,69 @@ export function PresentationView({
 
   // Get layout positions
   const blockIds = currentBlocks.map(b => b.id);
-  const layoutPositions = getCurrentLayout(
-    blockIds, 
-    currentSlide.layout || 'auto', 
-    currentSlide.layoutPattern || 0,
-    currentSlide.hasTitleZone || false
-  );
+  
+  // If a block is fullscreened, only show that block at full size
+  const displayBlocks = fullscreenBlockId 
+    ? currentBlocks.filter(b => b.id === fullscreenBlockId)
+    : currentBlocks;
+  
+  const layoutPositions = fullscreenBlockId
+    ? [{ blockId: fullscreenBlockId, column: 1, columnSpan: 12, row: 1, rowSpan: 6 }]
+    : getCurrentLayout(
+        blockIds, 
+        currentSlide.layout || 'auto', 
+        currentSlide.layoutPattern || 0,
+        currentSlide.hasTitleZone || false
+      );
 
   return (
     <div ref={containerRef} className="fixed inset-0 bg-white z-50">
-      {/* Just the slides - nothing else */}
       {currentBlocks.length === 0 ? (
         <div className="flex items-center justify-center h-full text-gray-400 text-4xl">
           Empty slide
         </div>
       ) : (
         <div 
-          className="h-full p-8"
+          className="relative w-full bg-gray-100"
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(12, 1fr)',
-            gap: '2rem',
-            // REMOVED: alignContent: 'center' - this was centering all content vertically
-            // Now content starts from the top, allowing titles to be at the very top
-            alignContent: 'start'
+            paddingBottom: '56.25%',
           }}
         >
-          {layoutPositions.map((position) => {
-            const block = currentBlocks.find(b => b.id === position.blockId);
-            if (!block) return null;
+          <div 
+            className="absolute inset-0 bg-white"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(12, 1fr)',
+              gridTemplateRows: 'repeat(6, 1fr)',
+              gap: '2rem',
+              padding: '2rem',
+            }}
+          >
+            {layoutPositions.map((position) => {
+              const block = displayBlocks.find(b => b.id === position.blockId);
+              if (!block) return null;
 
-            return (
-              <div
-                key={position.blockId}
-                className="presentation-block"
-                style={{
-                  gridColumn: `${position.column} / span ${position.columnSpan}`,
-                  gridRow: `${position.row} / span ${position.rowSpan}`,
-                }}
-              >
-                <UniversalBlockRenderer
-                  block={block}
-                  isEditable={false}
-                />
-              </div>
-            );
-          })}
+              return (
+                <div
+                  key={position.blockId}
+                  className="presentation-block"
+                  style={{
+                    gridColumn: `${position.column} / span ${position.columnSpan}`,
+                    gridRow: `${position.row} / span ${position.rowSpan}`,
+                    height: '100%',
+                    overflow: 'hidden'
+                  }}
+                >
+                  <UniversalBlockRenderer
+                    block={block}
+                    isEditable={false}
+                    isFullscreen={fullscreenBlockId === block.id}
+                    onToggleFullscreen={() => onToggleBlockFullscreen(block.id)}
+                  />
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
