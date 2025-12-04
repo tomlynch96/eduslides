@@ -164,6 +164,44 @@ export interface MatchBlockInstance extends BlockInstance {
     shuffled?: number[];      // Indices for shuffled descriptions (set on first view)
   };
 }
+
+//NEW SLIDE LAYOUT
+// Add this enum
+export enum SlideLayout {
+  SINGLE = 'single',
+  TITLE_SINGLE = 'title-single',
+  TWO_HORIZONTAL = 'two-h',
+  TWO_VERTICAL = 'two-v',
+  SIDEBAR_LEFT = 'sidebar-l',
+  GRID_2x2 = 'grid-2x2',
+}
+
+// Add SimpleSlide interface (move from App.tsx)
+export interface SimpleSlide {
+  id: string;
+  blockIds: string[];
+  layout: SlideLayout;
+}
+
+// Add these new interfaces
+export interface LayoutSlot {
+  id: string;
+  column: number;
+  columnSpan: number;
+  row: number;
+  rowSpan: number;
+  label?: string;
+}
+
+export interface LayoutDefinition {
+  id: SlideLayout;
+  name: string;
+  description: string;
+  slots: LayoutSlot[];
+  minBlocks: number;
+  maxBlocks: number;
+  icon: string;
+}
 // ============================================
 // SLIDES
 // ============================================

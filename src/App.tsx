@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import type { BlockInstance, BlockTypeName } from './types/core';
+import type { BlockInstance, BlockTypeName, SimpleSlide } from './types/core';
+import { SlideLayout } from './types/core';
 import './block-definitions'; // Initialize block registry
 import { blockRegistry } from './block-registry';
+import { getDefaultLayout } from './layouts/layoutRegistry';
 import { LessonProvider } from './LessonContext';
 import { SlideCanvas } from './components/SlideCanvas';
 import { PresentationView } from './components/PresentationView';
@@ -23,64 +25,98 @@ import {
 } from './lessonExport';
 import { saveBlockInstance } from './storage/storage';
 
-// Slide with layout information
-interface SimpleSlide {
-  id: string;
-  blockIds: string[];
-  layout: 'auto' | 'vertical-stack';
-  layoutPattern?: number;
-  hasTitleZone?: boolean;  // NEW
-}
-
 function App() {
-  // All blocks that have been created
-  const [allBlocks, setAllBlocks] = useState<BlockInstance[]>([]);
+  // ============================================
+  // STATE MANAGEMENT
+  // ============================================
   
-  // All slides in the current lesson
-  const [slides, setSlides] = useState<SimpleSlide[]>([
-    { id: 'slide-1', blockIds: [], layout: 'auto', layoutPattern: 0, hasTitleZone: false }
-  ]);
-  
-  // Which slide we're currently viewing/editing
-  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  
-  // Fullscreen block tracking
-  const [fullscreenBlockId, setFullscreenBlockId] = useState<string | null>(null);
-  
-  // Current lesson ID (null if unsaved)
+  // Lesson state
   const [currentLessonId, setCurrentLessonId] = useState<string | null>(null);
-  
-  // All saved lessons
   const [savedLessons, setSavedLessons] = useState<SimpleLessonData[]>([]);
-
-  // Presentation mode
-  const [isPresentationMode, setIsPresentationMode] = useState(false);
-
-  // Lesson objectives (separate from blocks)
-  const [lessonObjectives, setLessonObjectives] = useState<Array<{
-    id: string;
-    text: string;
-  }>>([]);
   
+  // Slide state
+  const [slides, setSlides] = useState<SimpleSlide[]>([
+    { 
+      id: 'slide-1', 
+      blockIds: [], 
+      layout: SlideLayout.SINGLE 
+    }
+  ]);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const currentSlide = slides[currentSlideIndex];
+  
+  // Block state
+  const [allBlocks, setAllBlocks] = useState<BlockInstance[]>([]);
+  const currentSlideBlocks = allBlocks.filter(block => 
+    currentSlide.blockIds.includes(block.id)
+  );
+  
+  // Objectives state
+  const [lessonObjectives, setLessonObjectives] = useState<Array<{ id: string; text: string }>>([]);
   const [completedObjectives, setCompletedObjectives] = useState<string[]>([]);
+  
+  // UI state
+  const [isPresentationMode, setIsPresentationMode] = useState(false);
+  const [fullscreenBlockId, setFullscreenBlockId] = useState<string | null>(null);
 
-  // Load blocks and lessons from storage on mount
+  // ============================================
+  // INITIALIZATION
+  // ============================================
+  
   useEffect(() => {
-    const savedBlocks = getAllBlockInstances();
-    setAllBlocks(savedBlocks);
+    // Load all blocks from storage
+    const blocks = getAllBlockInstances();
+    setAllBlocks(blocks);
     
+    // Load saved lessons list
     const lessons = getAllSimpleLessons();
     setSavedLessons(lessons);
   }, []);
 
-  // Get the current slide
-  const currentSlide = slides[currentSlideIndex];
+  // ============================================
+  // BLOCK HANDLERS
+  // ============================================
   
-  // Get the actual block instances for the current slide
-  const currentSlideBlocks = currentSlide.blockIds
-    .map(id => allBlocks.find(block => block.id === id))
-    .filter((block): block is BlockInstance => block !== undefined);
-
+  const handleInsertBlock = (blockType: BlockTypeName) => {
+    const blockDef = blockRegistry.get(blockType);
+    
+    if (!blockDef) {
+      console.error(`Block type ${blockType} not found in registry`);
+      return;
+    }
+    
+    // Create new block instance
+    const newBlock = blockDef.createDefault();
+    
+    // Save to storage
+    saveBlockInstance(newBlock);
+    
+    // Add to state
+    setAllBlocks([...allBlocks, newBlock]);
+    
+    // Add to current slide and auto-select appropriate layout
+    const updatedSlides = [...slides];
+    const newBlockIds = [...currentSlide.blockIds, newBlock.id];
+    
+    updatedSlides[currentSlideIndex] = {
+      ...currentSlide,
+      blockIds: newBlockIds,
+      layout: getDefaultLayout(newBlockIds.length) // Auto-select layout based on block count
+    };
+    
+    setSlides(updatedSlides);
+  };
+  
+  const handleUpdateBlock = (updatedBlock: BlockInstance) => {
+    // Update in storage
+    saveBlockInstance(updatedBlock);
+    
+    // Update in state
+    setAllBlocks(allBlocks.map(block => 
+      block.id === updatedBlock.id ? updatedBlock : block
+    ));
+  };
+  
   const handleRemoveFromSlide = (blockId: string) => {
     const updatedSlides = [...slides];
     updatedSlides[currentSlideIndex] = {
@@ -93,205 +129,41 @@ function App() {
   const handleToggleBlockFullscreen = (blockId: string) => {
     setFullscreenBlockId(fullscreenBlockId === blockId ? null : blockId);
   };
-  const handleInsertBlock = (blockType: BlockTypeName) => {
-    console.log('Inserting block type:', blockType);
-    
-    const blockDef = blockRegistry.get(blockType);
-    console.log('Block definition:', blockDef);
-    
-    if (!blockDef) {
-      console.error(`Block type ${blockType} not found in registry`);
-      return;
-    }
-    
-    const newBlock = blockDef.createDefault();
-    console.log('Created block:', newBlock);
-    
-    saveBlockInstance(newBlock);
-    setAllBlocks([...allBlocks, newBlock]);
-    // Add to current slide
-    const updatedSlides = [...slides];
-    updatedSlides[currentSlideIndex] = {
-      ...currentSlide,
-      blockIds: [...currentSlide.blockIds, newBlock.id],
-    };
-    console.log('Updated slides:', updatedSlides);
-    setSlides(updatedSlides);
-  };
+
+  // ============================================
+  // LAYOUT HANDLER
+  // ============================================
   
-  const handleUpdateBlock = (updatedBlock: BlockInstance) => {
-    // Update in storage
-    saveBlockInstance(updatedBlock);
-    
-    // Update in allBlocks state
-    setAllBlocks(allBlocks.map(block => 
-      block.id === updatedBlock.id ? updatedBlock : block
-    ));
-  };
-  const handleChangeLayout = (pattern: number) => {
+  const handleLayoutChange = (newLayout: SlideLayout) => {
     const updatedSlides = [...slides];
     updatedSlides[currentSlideIndex] = {
       ...currentSlide,
-      layoutPattern: pattern
+      layout: newLayout
     };
     setSlides(updatedSlides);
   };
+
+  // ============================================
+  // SLIDE NAVIGATION HANDLERS
+  // ============================================
   
-  const handleToggleLayoutMode = () => {
-    const updatedSlides = [...slides];
-    updatedSlides[currentSlideIndex] = {
-      ...currentSlide,
-      layout: currentSlide.layout === 'auto' ? 'vertical-stack' : 'auto',
-      layoutPattern: 0  // Reset pattern when switching modes
-    };
-    setSlides(updatedSlides);
-  };
-  // ==============================================================================
-// MODIFIED handleToggleTitleZone FUNCTION
-// ==============================================================================
-// This replaces the existing function in App.tsx
-//
-// Key changes:
-// 1. When enabling title zone (hasTitleZone: false -> true):
-//    - Creates a new text block with title styling
-//    - Inserts it at the BEGINNING of the current slide's blockIds array
-//    - Saves the block to storage and state
-// 
-// 2. When disabling title zone (hasTitleZone: true -> false):
-//    - Removes the first block from the slide (assumed to be the title)
-//    - Optionally: could keep the block but move it to regular content position
-// ==============================================================================
-
-const handleToggleTitleZone = () => {
-  const updatedSlides = [...slides];
-  const currentSlide = slides[currentSlideIndex];
-  const isEnablingTitle = !currentSlide.hasTitleZone;
-
-  if (isEnablingTitle) {
-    // === ENABLING TITLE ZONE ===
-    // Create a new text block with title styling
-    const blockDef = blockRegistry.get('text');
-    if (!blockDef) {
-      console.error('Text block type not found in registry');
-      return;
-    }
-
-    // Create a default text block
-    const newTitleBlock = blockDef.createDefault();
-    
-    // Customize it for title use
-    const titleBlock = {
-      ...newTitleBlock,
-      content: {
-        ...newTitleBlock.content,
-        text: '', // Start empty - user will fill it in
-        fontSize: 'large' as const, // Make it larger for title
-        alignment: 'center' as const, // Center titles by default
-      }
-    };
-
-    // Save to storage
-    saveBlockInstance(titleBlock);
-    
-    // Add to allBlocks state
-    setAllBlocks([...allBlocks, titleBlock]);
-    
-    // Insert at the BEGINNING of the current slide
-    updatedSlides[currentSlideIndex] = {
-      ...currentSlide,
-      hasTitleZone: true,
-      blockIds: [titleBlock.id, ...currentSlide.blockIds], // Prepend title block
-      layoutPattern: 0  // Reset pattern when toggling title zone
-    };
-
-  } else {
-    // === DISABLING TITLE ZONE ===
-    // Remove the first block (the title block)
-    const blockIdsWithoutTitle = currentSlide.blockIds.slice(1);
-    
-    updatedSlides[currentSlideIndex] = {
-      ...currentSlide,
-      hasTitleZone: false,
-      blockIds: blockIdsWithoutTitle,
-      layoutPattern: 0  // Reset pattern when toggling title zone
-    };
-  }
-
-  setSlides(updatedSlides);
-};
-
-
-// ==============================================================================
-// ALTERNATIVE: Keep the block when disabling title zone
-// ==============================================================================
-// If you prefer to keep the title block as regular content when disabling
-// the title zone (rather than removing it), use this version instead:
-
-const handleToggleTitleZone_KeepBlock = () => {
-  const updatedSlides = [...slides];
-  const currentSlide = slides[currentSlideIndex];
-  const isEnablingTitle = !currentSlide.hasTitleZone;
-
-  if (isEnablingTitle) {
-    // Same as above - create and add title block
-    const blockDef = blockRegistry.get('text');
-    if (!blockDef) {
-      console.error('Text block type not found in registry');
-      return;
-    }
-
-    const newTitleBlock = blockDef.createDefault();
-    
-    const titleBlock = {
-      ...newTitleBlock,
-      content: {
-        ...newTitleBlock.content,
-        text: '',
-        fontSize: 'large' as const,
-        alignment: 'center' as const,
-      }
-    };
-
-    saveBlockInstance(titleBlock);
-    setAllBlocks([...allBlocks, titleBlock]);
-    
-    updatedSlides[currentSlideIndex] = {
-      ...currentSlide,
-      hasTitleZone: true,
-      blockIds: [titleBlock.id, ...currentSlide.blockIds],
-      layoutPattern: 0
-    };
-
-  } else {
-    // Just toggle the flag - keep all blocks where they are
-    // The first block will now be treated as regular content
-    updatedSlides[currentSlideIndex] = {
-      ...currentSlide,
-      hasTitleZone: false,
-      layoutPattern: 0
-    };
-  }
-
-  setSlides(updatedSlides);
-};
   const handleNewSlide = () => {
     const newSlide: SimpleSlide = {
       id: `slide-${Date.now()}`,
       blockIds: [],
-      layout: 'auto',
-      layoutPattern: 0,
-      hasTitleZone: false
+      layout: SlideLayout.SINGLE
     };
     setSlides([...slides, newSlide]);
     setCurrentSlideIndex(slides.length);
   };
 
   const handleDeleteSlide = () => {
-    if (slides.length === 1) return;
+    if (slides.length === 1) return; // Can't delete last slide
     
     const updatedSlides = slides.filter((_, index) => index !== currentSlideIndex);
     setSlides(updatedSlides);
     
+    // Adjust current index if needed
     if (currentSlideIndex >= updatedSlides.length) {
       setCurrentSlideIndex(updatedSlides.length - 1);
     }
@@ -309,6 +181,10 @@ const handleToggleTitleZone_KeepBlock = () => {
     }
   };
 
+  // ============================================
+  // LESSON MANAGEMENT HANDLERS
+  // ============================================
+  
   const handleSaveLesson = (name: string) => {
     const lessonData: SimpleLessonData = {
       id: currentLessonId || generateId(),
@@ -316,9 +192,7 @@ const handleToggleTitleZone_KeepBlock = () => {
       slides: slides.map(slide => ({
         id: slide.id,
         blockIds: [...slide.blockIds],
-        layout: slide.layout,
-        layoutPattern: slide.layoutPattern,
-        hasTitleZone: slide.hasTitleZone
+        layout: slide.layout
       })),
       objectives: lessonObjectives.length > 0 ? lessonObjectives : undefined,
       objectivesState: completedObjectives.length > 0 ? { completed: completedObjectives } : undefined,
@@ -337,15 +211,18 @@ const handleToggleTitleZone_KeepBlock = () => {
     const lesson = getSimpleLesson(lessonId);
     if (!lesson) return;
     
+    // Load slides with layout information
     setSlides(lesson.slides.map(slide => ({
       id: slide.id,
       blockIds: [...slide.blockIds],
-      layout: slide.layout || 'auto',
-      layoutPattern: slide.layoutPattern || 0,
-      hasTitleZone: slide.hasTitleZone || false
+      layout: slide.layout
     })));
+    
+    // Load objectives
     setLessonObjectives(lesson.objectives || []);
     setCompletedObjectives(lesson.objectivesState?.completed || []);
+    
+    // Update current lesson
     setCurrentLessonId(lesson.id);
     setCurrentSlideIndex(0);
   };
@@ -365,7 +242,11 @@ const handleToggleTitleZone_KeepBlock = () => {
 
   const handleNewLesson = () => {
     if (window.confirm('Start a new lesson? Any unsaved changes will be lost.')) {
-      setSlides([{ id: 'slide-1', blockIds: [], layout: 'auto', layoutPattern: 0, hasTitleZone: false }]);
+      setSlides([{ 
+        id: 'slide-1', 
+        blockIds: [], 
+        layout: SlideLayout.SINGLE 
+      }]);
       setCurrentSlideIndex(0);
       setCurrentLessonId(null);
       setLessonObjectives([]);
@@ -373,6 +254,10 @@ const handleToggleTitleZone_KeepBlock = () => {
     }
   };
 
+  // ============================================
+  // IMPORT/EXPORT HANDLERS
+  // ============================================
+  
   const handleExportLesson = () => {
     const lessonName = currentLessonId 
       ? savedLessons.find(l => l.id === currentLessonId)?.name || 'Untitled Lesson'
@@ -387,8 +272,8 @@ const handleToggleTitleZone_KeepBlock = () => {
     };
 
     const jsonString = exportLessonAsJSON(exportData);
-
     const filename = `${lessonName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${Date.now()}.json`;
+    
     downloadJSON(jsonString, filename);
   };
 
@@ -397,13 +282,8 @@ const handleToggleTitleZone_KeepBlock = () => {
       const jsonString = await readJSONFile(file);
       const result = validateAndParseJSON(jsonString);
 
-      if (!result.success) {
-        alert(`Import failed: ${result.error}`);
-        return;
-      }
-
-      if (!result.data) {
-        alert('Import failed: No data');
+      if (!result.success || !result.data) {
+        alert(`Import failed: ${result.error || 'No data'}`);
         return;
       }
 
@@ -420,13 +300,13 @@ const handleToggleTitleZone_KeepBlock = () => {
         return;
       }
 
-      // Import blocks (save to storage and state)
+      // Import blocks
       const importedBlocks = importData.blocks;
       importedBlocks.forEach(block => {
         saveBlockInstance(block);
       });
 
-      // Add imported blocks to allBlocks state
+      // Add imported blocks to state
       const newAllBlocks = [...allBlocks];
       importedBlocks.forEach(block => {
         if (!newAllBlocks.find(b => b.id === block.id)) {
@@ -435,15 +315,14 @@ const handleToggleTitleZone_KeepBlock = () => {
       });
       setAllBlocks(newAllBlocks);
 
-      // Import slides
+      // Import slides (default to SINGLE layout for imported lessons)
       setSlides(importData.slides.map(slide => ({
         id: slide.id,
         blockIds: [...slide.blockIds],
-        layout: 'auto',
-        layoutPattern: 0
+        layout: SlideLayout.SINGLE
       })));
 
-      // Import objectives if present
+      // Import objectives
       if (importData.lesson.objectives) {
         setLessonObjectives(importData.lesson.objectives);
       } else {
@@ -465,6 +344,10 @@ const handleToggleTitleZone_KeepBlock = () => {
     }
   };
 
+  // ============================================
+  // OBJECTIVES HANDLERS
+  // ============================================
+  
   const handleToggleObjective = (objectiveId: string) => {
     const newCompleted = completedObjectives.includes(objectiveId)
       ? completedObjectives.filter(id => id !== objectiveId)
@@ -473,10 +356,11 @@ const handleToggleTitleZone_KeepBlock = () => {
     setCompletedObjectives(newCompleted);
   };
 
-  // If in presentation mode, show presentation view
+  // ============================================
+  // RENDER: PRESENTATION MODE
+  // ============================================
+  
   if (isPresentationMode) {
-    // Put debug logs BEFORE the return statement:
-console.log('App.tsx - lessonObjectives:', lessonObjectives);
     return (
       <LessonProvider
         lessonObjectives={lessonObjectives}
@@ -497,7 +381,10 @@ console.log('App.tsx - lessonObjectives:', lessonObjectives);
     );
   }
 
-  // Otherwise show editing interface
+  // ============================================
+  // RENDER: EDITING MODE
+  // ============================================
+  
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
@@ -536,7 +423,7 @@ console.log('App.tsx - lessonObjectives:', lessonObjectives);
         onInsertBlock={handleInsertBlock}
       />
 
-      {/* Main Content */}
+      {/* Main Content - Slide Editor */}
       <div className="flex-1 max-w-7xl mx-auto px-8 py-6 w-full">
         <LessonProvider
           lessonObjectives={lessonObjectives}
@@ -545,21 +432,16 @@ console.log('App.tsx - lessonObjectives:', lessonObjectives);
         >
           <SlideCanvas
             blocks={currentSlideBlocks}
+            currentLayout={currentSlide.layout}
+            onLayoutChange={handleLayoutChange}
             onRemoveBlock={handleRemoveFromSlide}
             onUpdateBlock={handleUpdateBlock}
-            layout={currentSlide.layout}
-            layoutPattern={currentSlide.layoutPattern || 0}
-            hasTitleZone={currentSlide.hasTitleZone || false}
-            onChangeLayout={handleChangeLayout}
-            onToggleLayoutMode={handleToggleLayoutMode}
-            onToggleTitleZone={handleToggleTitleZone}
             fullscreenBlockId={fullscreenBlockId}
             onToggleBlockFullscreen={handleToggleBlockFullscreen}
           />
         </LessonProvider>
       </div>
     </div>
-    
   );
 }
 

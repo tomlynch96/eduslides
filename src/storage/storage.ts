@@ -1,4 +1,4 @@
-import type { BlockInstance, Slide, Flow, Lesson } from '../types/core';
+import type { BlockInstance, Slide, Flow, Lesson, SlideLayout } from '../types/core';
 
 // ============================================
 // STORAGE LAYER
@@ -146,10 +146,7 @@ export interface SimpleLessonData {
   slides: Array<{
     id: string;
     blockIds: string[];
-    layout?: 'auto' | 'vertical-stack';
-    layoutPattern?: number;
-    hasTitleZone?: boolean;
-    manualPositions?: Array<[string, { column: number; columnSpan: number; row: number; rowSpan: number }]>;
+    layout: SlideLayout;  // Changed from 'auto' | 'vertical-stack'
   }>;
   objectives?: Array<{
     id: string;
