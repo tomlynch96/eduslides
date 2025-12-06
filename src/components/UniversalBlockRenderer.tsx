@@ -9,8 +9,8 @@ interface UniversalBlockRendererProps {
   onUpdate?: (block: BlockInstance) => void;
   onRemove?: () => void;
   isEditable: boolean;
-  isFullscreen?: boolean;  // ADD THIS
-  onToggleFullscreen?: () => void;  // ADD THIS
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
 }
 
 export function UniversalBlockRenderer({
@@ -18,8 +18,8 @@ export function UniversalBlockRenderer({
   onUpdate,
   onRemove,
   isEditable,
-  isFullscreen = false,  // ADD THIS
-  onToggleFullscreen,  // ADD THIS
+  isFullscreen = false,
+  onToggleFullscreen,
 }: UniversalBlockRendererProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const blockDef = blockRegistry.get(block.type);
@@ -46,9 +46,6 @@ export function UniversalBlockRenderer({
     }
   };
 
-  
-  // Always render in VIEW mode with scaling
-  // Always render in VIEW mode with scaling
   return (
     <>
       <div 
@@ -60,11 +57,10 @@ export function UniversalBlockRenderer({
             block={block}
             mode="view"
             onContentChange={handleContentChange}
-            isFullscreen={isFullscreen}  // ADD THIS - pass to block
+            isFullscreen={isFullscreen}
           />
         </ScalingBlockWrapper>
         
-        {/* Fullscreen button - shows on hover */}
         {/* Fullscreen button - shows on hover */}
         {onToggleFullscreen && (
           <button
