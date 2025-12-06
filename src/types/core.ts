@@ -155,6 +155,7 @@ export interface ClozeBlockInstance extends BlockInstance {
   content: {
     text: string;              // The full text
     blankedIndices: number[];  // Which word indices are blanked
+    instructions?: string; 
   };
 }
 export interface MatchBlockInstance extends BlockInstance {

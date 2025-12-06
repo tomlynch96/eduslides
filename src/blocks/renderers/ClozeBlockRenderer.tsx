@@ -60,6 +60,26 @@ export function ClozeBlockRenderer({
           Edit Cloze (Fill in Blanks)
         </h3>
 
+        {/* Instructions field */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Instructions (optional)
+          </label>
+          <input
+            type="text"
+            value={block.content.instructions || ''}
+            onChange={(e) => onContentChange?.({
+              ...block.content,
+              instructions: e.target.value,
+            })}
+            placeholder="e.g., Fill in the blanks with the correct words"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Leave blank to show default "Cloze"
+          </p>
+        </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Text Content
@@ -131,9 +151,14 @@ export function ClozeBlockRenderer({
 
   return (
     <div className="p-4 bg-orange-50 rounded-xl h-full flex flex-col">
-      {/* Hover controls - only show if there are blanks */}
-      {hasBlanks && (
-        <div className="flex items-center justify-end mb-3 group">
+      {/* Header with instructions */}
+      <div className="flex items-center justify-between mb-3 group">
+        <h3 className="text-3xl font-bold text-gray-800">
+          {block.content.instructions || 'Cloze'}
+        </h3>
+        
+        {/* Hover controls - only show if there are blanks */}
+        {hasBlanks && (
           <div className="opacity-0 group-hover:opacity-100 transition-opacity">
             {revealedBlanks.size === blankedIndices.length ? (
               <button
@@ -157,8 +182,8 @@ export function ClozeBlockRenderer({
               </button>
             )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Main text - bigger and clearer */}
       <div className="text-3xl leading-relaxed text-gray-800 flex-1">

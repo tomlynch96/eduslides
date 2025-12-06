@@ -236,6 +236,7 @@ blockRegistry.register(
       content: {
         text: '',
         blankedIndices: [],
+        instructions: '',  // NEW: Initialize with empty string
       },
     }),
     
