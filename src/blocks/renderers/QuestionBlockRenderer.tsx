@@ -156,7 +156,7 @@ export function QuestionBlockRenderer({
       <div className="p-4 bg-white rounded-xl h-full flex flex-col" style={{ maxWidth: 'none', width: '100%' }}>
         {/* Header - shows custom instructions or default title */}
         <div className="flex items-center justify-between mb-3 group">
-          <h3 className="text-xl font-bold text-gray-800">
+          <h3 className="text-3xl font-bold text-gray-800">
             {instructions || 'Questions & Answers'}
           </h3>
           

@@ -226,7 +226,8 @@ function App() {
       slides: slides.map(slide => ({
         id: slide.id,
         blockIds: [...slide.blockIds],
-        layout: slide.layout
+        layout: slide.layout,
+        title: slide.title
       })),
       objectives: lessonObjectives.length > 0 ? lessonObjectives : undefined,
       objectivesState: completedObjectives.length > 0 ? { completed: completedObjectives } : undefined,
