@@ -1,8 +1,9 @@
 // ============================================
-// QUESTION BLOCK RENDERER (Registry-Compatible)
+// QUESTION BLOCK RENDERER - REDESIGNED
+// Content-First, Discreet Controls, Warm Pastels
 // ============================================
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { BlockRendererProps } from '../../block-registry';
 import type { QuestionBlockInstance } from '../../types/core';
 
@@ -54,15 +55,7 @@ export function QuestionBlockRenderer({
       setShowAnswerInFullscreen(false);
     }
   };
-  // Which slide we're currently viewing/editing
-  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  
-  // ADD THIS - Fullscreen block tracking
-  const [fullscreenBlockId, setFullscreenBlockId] = useState<string | null>(null);
-  
-  // Current lesson ID (null if unsaved)
-  const [currentLessonId, setCurrentLessonId] = useState<string | null>(null);
-  
+
   const previousQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
@@ -70,55 +63,21 @@ export function QuestionBlockRenderer({
     }
   };
 
-  // Keyboard navigation in fullscreen
-  useEffect(() => {
-    if (!isFullscreen) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      switch (e.key) {
-        case 'Escape':
-          exitFullscreen();
-          break;
-        case 'ArrowRight':
-        case 'ArrowDown':
-          e.preventDefault();
-          nextQuestion();
-          break;
-        case 'ArrowLeft':
-        case 'ArrowUp':
-          e.preventDefault();
-          previousQuestion();
-          break;
-        case ' ':
-          e.preventDefault();
-          setShowAnswerInFullscreen(!showAnswerInFullscreen);
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFullscreen, currentQuestionIndex, showAnswerInFullscreen, questions.length]);
-
   // EDIT MODE
   if (mode === 'edit') {
     const questionsText = questions.join('\n');
     const answersText = answers.join('\n');
 
-    const handleQuestionsTextChange = (text: string) => {
-      const lines = text.split('\n');
+    const handleQuestionsTextChange = (value: string) => {
+      const lines = value.split('\n');
       onContentChange?.({
         ...block.content,
         questions: lines,
       });
     };
-    
-    const handleToggleBlockFullscreen = (blockId: string) => {
-      setFullscreenBlockId(fullscreenBlockId === blockId ? null : blockId);
-    };
 
-    const handleAnswersTextChange = (text: string) => {
-      const lines = text.split('\n');
+    const handleAnswersTextChange = (value: string) => {
+      const lines = value.split('\n');
       onContentChange?.({
         ...block.content,
         answers: lines,
@@ -182,132 +141,149 @@ The distance between successive peaks of a wave"
     );
   }
 
-  // VIEW MODE - Always render list view
+  // VIEW MODE - Ultra-compact with hover controls
   return (
     <>
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-2xl font-bold text-gray-900">
+      <div className="p-4 bg-amber-50 rounded-xl h-full flex flex-col" style={{ maxWidth: 'none', width: '100%' }}>
+        {/* Header - compact with hover-only controls */}
+        <div className="flex items-center justify-between mb-3 group">
+          <h3 className="text-xl font-bold text-gray-900">
             Questions & Answers
           </h3>
-          <div className="flex gap-2">
+          
+          {/* Controls appear on hover */}
+          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 revealAll();
               }}
-              className="px-3 py-1 text-sm bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
+              className="px-2 py-1 text-xs text-emerald-700 hover:bg-emerald-100 rounded transition-colors"
+              title="Reveal all answers"
             >
-              Reveal All
+              👁️
             </button>
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 hideAll();
               }}
-              className="px-3 py-1 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors"
+              className="px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded transition-colors"
+              title="Hide all answers"
             >
-              Hide All
+              🙈
             </button>
           </div>
         </div>
 
-        <div className="space-y-4">
+        {/* Questions list - maximum space efficiency */}
+        <div className="space-y-2 flex-1 w-full">
           {questions.map((question, index) => {
             const isRevealed = revealedAnswers.has(index);
             
             return (
               <div
                 key={index}
-                className="border border-gray-200 rounded-lg p-4 bg-gray-50"
+                className="group relative bg-white rounded-lg px-3 py-2.5 hover:shadow-md transition-shadow border border-amber-100"
+                style={{ width: '100%', maxWidth: 'none' }}
               >
-                <div className="flex items-start justify-between gap-4 mb-3">
-                  <div className="flex-1">
-                    <div className="text-sm text-gray-500 mb-1">
-                      Question {index + 1}:
-                    </div>
-                    <div className="text-lg font-medium text-gray-900">
+                {/* Inline layout: number + question on same line */}
+                <div className="flex items-start gap-2.5">
+                  {/* Question number - inline, bold */}
+                  <div className="text-3xl font-bold text-gray-400 flex-shrink-0 leading-tight">
+                    {index + 1})
+                  </div>
+                  
+                  {/* Question text - takes all remaining space */}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-3xl font-medium text-gray-900 leading-tight">
                       {question}
                     </div>
+
+                    {/* Answer - appears below when revealed */}
+                    {isRevealed && (
+                      <div className="mt-2.5 pl-3 border-l-4 border-emerald-400 bg-emerald-50 py-2 pr-2 rounded-r">
+                        <div className="text-xl text-gray-800">
+                          {answers[index]}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      enterFullscreen(index);
-                    }}
-                    className="px-3 py-1 text-sm bg-purple-600 hover:bg-purple-700 text-white rounded transition-colors whitespace-nowrap"
-                  >
-                    Fullscreen
-                  </button>
+
+                  {/* Hover controls - top right, symbols only */}
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleAnswer(index);
+                      }}
+                      className="p-1.5 text-lg hover:bg-blue-100 rounded transition-colors"
+                      title={isRevealed ? 'Hide answer' : 'Show answer'}
+                    >
+                      {isRevealed ? '🙈' : '👁️'}
+                    </button>
+                    
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        enterFullscreen(index);
+                      }}
+                      className="p-1.5 text-lg hover:bg-purple-100 rounded transition-colors"
+                      title="Fullscreen"
+                    >
+                      ⛶
+                    </button>
+                  </div>
                 </div>
-
-                {isRevealed ? (
-                  <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded">
-                    <div className="text-sm text-green-700 mb-1">Answer:</div>
-                    <div className="text-gray-800">{answers[index]}</div>
-                  </div>
-                ) : (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleAnswer(index);
-                    }}
-                    className="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors"
-                  >
-                    Reveal Answer
-                  </button>
-                )}
-
-                {isRevealed && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleAnswer(index);
-                    }}
-                    className="mt-2 ml-2 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded text-sm transition-colors"
-                  >
-                    Hide Answer
-                  </button>
-                )}
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* Fullscreen overlay - rendered directly (not portaled) */}
+      {/* Fullscreen mode - full redesign */}
       {isFullscreen && (
-        <div className="fixed inset-0 bg-white z-[100000] flex flex-col">
+        <div className="fixed inset-0 bg-amber-50 z-[100000] flex flex-col">
+          {/* Top bar - discreet */}
           <div className="bg-gray-800 text-white px-6 py-3 flex items-center justify-between">
-            <div className="text-sm">
+            <div className="text-sm text-gray-300">
               Question {currentQuestionIndex + 1} of {questions.length}
             </div>
             <button
               onClick={exitFullscreen}
-              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors"
+              className="px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 rounded transition-colors"
             >
               Exit Fullscreen
             </button>
           </div>
 
+          {/* Main content area - question is HUGE */}
           <div className="flex-1 flex flex-col items-center justify-center p-12">
             <div className="max-w-4xl w-full">
-              <div className="text-sm text-gray-500 mb-4">Question:</div>
-              <div className="text-4xl font-bold text-gray-900 mb-12">
-                {questions[currentQuestionIndex]}
+              {/* Question */}
+              <div className="mb-12">
+                <div className="text-sm text-gray-500 mb-4 uppercase tracking-wide">
+                  Question
+                </div>
+                <div className="text-5xl font-bold text-gray-900 leading-tight">
+                  {questions[currentQuestionIndex]}
+                </div>
               </div>
 
+              {/* Answer */}
               {showAnswerInFullscreen ? (
-                <div className="mt-8">
-                  <div className="text-sm text-green-600 mb-4">Answer:</div>
-                  <div className="text-2xl text-gray-800 bg-green-50 border-2 border-green-500 rounded-lg p-6">
+                <div className="p-8 bg-emerald-100 border-2 border-emerald-400 rounded-xl">
+                  <div className="text-sm text-emerald-700 mb-3 uppercase tracking-wide">
+                    Answer
+                  </div>
+                  <div className="text-3xl text-gray-900">
                     {answers[currentQuestionIndex]}
                   </div>
                 </div>
               ) : (
                 <button
                   onClick={() => setShowAnswerInFullscreen(true)}
-                  className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xl font-medium transition-colors"
+                  className="px-6 py-3 text-sm bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg transition-colors font-medium"
                 >
                   Show Answer
                 </button>
@@ -315,23 +291,24 @@ The distance between successive peaks of a wave"
             </div>
           </div>
 
-          <div className="bg-gray-100 px-6 py-4 flex items-center justify-between">
+          {/* Bottom navigation - discreet */}
+          <div className="bg-gray-100 px-6 py-4 flex items-center justify-between border-t border-gray-200">
             <button
               onClick={previousQuestion}
               disabled={currentQuestionIndex === 0}
-              className="px-6 py-3 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded transition-colors"
+              className="px-4 py-2 text-xs bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed text-gray-700 rounded transition-colors"
             >
               ← Previous
             </button>
             
-            <div className="text-gray-600">
+            <div className="text-sm text-gray-600">
               {currentQuestionIndex + 1} / {questions.length}
             </div>
 
             <button
               onClick={nextQuestion}
               disabled={currentQuestionIndex === questions.length - 1}
-              className="px-6 py-3 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded transition-colors"
+              className="px-4 py-2 text-xs bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed text-gray-700 rounded transition-colors"
             >
               Next →
             </button>
