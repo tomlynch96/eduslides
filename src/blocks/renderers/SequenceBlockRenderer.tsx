@@ -1,5 +1,6 @@
 // ============================================
-// SEQUENCE BLOCK RENDERER (Registry-Compatible)
+// SEQUENCE BLOCK RENDERER - SIMPLIFIED
+// No numbers, maximum text size, warm pastels
 // ============================================
 
 import { useState } from 'react';
@@ -14,12 +15,34 @@ export function SequenceBlockRenderer({
   const { items, revealMode } = block.content;
   const [revealedCount, setRevealedCount] = useState(revealMode === 'all' ? items.length : 0);
 
+  const handleRevealNext = () => {
+    if (revealedCount < items.length) {
+      setRevealedCount(revealedCount + 1);
+    }
+  };
+
+  const handleReset = () => {
+    setRevealedCount(0);
+  };
+
+  const revealAll = () => {
+    setRevealedCount(items.length);
+  };
+
+  const hideAll = () => {
+    setRevealedCount(0);
+  };
+
   // EDIT MODE
   if (mode === 'edit') {
     const itemsText = items.join('\n');
 
     return (
       <div className="p-6 border-2 border-blue-500 bg-blue-50 rounded space-y-4">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          Edit Sequence
+        </h3>
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Sequence Items (one per line)
@@ -68,42 +91,61 @@ Bake at 180°C"
     );
   }
 
-  // VIEW MODE
-  const handleRevealNext = () => {
-    if (revealedCount < items.length) {
-      setRevealedCount(revealedCount + 1);
-    }
-  };
-
-  const handleReset = () => {
-    setRevealedCount(0);
-  };
-
+  // VIEW MODE - Simple, no numbers, maximum text size
   return (
-    <div className="p-6">
-      <h3 className="text-2xl font-bold text-gray-900 mb-6">
-        Sequence
-      </h3>
+    <div className="p-4 bg-white rounded-xl h-full flex flex-col">
+      {/* Header with hover-only controls */}
+      <div className="flex items-center justify-between mb-3 group">
+        <h3 className="text-2xl font-bold text-gray-800">
+          Sequence
+        </h3>
+        
+        {/* Controls appear on hover - only for click-to-reveal */}
+        {revealMode === 'click-to-reveal' && (
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+            {revealedCount === items.length ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  hideAll();
+                }}
+                className="px-3 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded transition-colors"
+              >
+                Hide All
+              </button>
+            ) : (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  revealAll();
+                }}
+                className="px-3 py-1 text-xs text-emerald-700 hover:bg-emerald-100 rounded transition-colors"
+              >
+                Reveal All
+              </button>
+            )}
+          </div>
+        )}
+      </div>
 
-      <div className="space-y-3">
+      {/* Sequence items - just text, no numbers */}
+      <div className="space-y-3 flex-1">
         {items.map((item, index) => {
           const isRevealed = index < revealedCount || revealMode === 'all';
           
           return (
             <div
               key={index}
-              className={`flex items-start gap-3 p-4 rounded-lg transition-all ${
+              className={`rounded-lg px-4 py-3 transition-all border ${
                 isRevealed 
-                  ? 'bg-blue-50 border-2 border-blue-300' 
-                  : 'bg-gray-100 border-2 border-gray-200 opacity-50'
+                  ? 'bg-amber-50 border-amber-200' 
+                  : 'bg-gray-50 border-gray-200 opacity-40'
               }`}
             >
-              <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                isRevealed ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'
+              {/* Just the text - as big as possible */}
+              <div className={`text-4xl font-medium leading-tight ${
+                isRevealed ? 'text-gray-800' : 'text-gray-400'
               }`}>
-                {index + 1}
-              </div>
-              <div className="flex-1 text-gray-800">
                 {isRevealed ? item : '•••'}
               </div>
             </div>
@@ -111,26 +153,27 @@ Bake at 180°C"
         })}
       </div>
 
+      {/* Bottom controls - only for click-to-reveal mode */}
       {revealMode === 'click-to-reveal' && (
-        <div className="mt-6 flex gap-3 justify-center">
+        <div className="mt-4 flex gap-2 justify-center">
           {revealedCount < items.length && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 handleRevealNext();
               }}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+              className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
             >
               Reveal Next ({revealedCount + 1}/{items.length})
             </button>
           )}
-          {revealedCount > 0 && (
+          {revealedCount > 0 && revealedCount === items.length && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 handleReset();
               }}
-              className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
+              className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors"
             >
               Reset
             </button>
