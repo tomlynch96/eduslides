@@ -43,6 +43,16 @@ export function MatchBlockRenderer({
     }
   }, [pairs.length]);
   
+  // When all matched, reorder to show correct pairs side-by-side
+  useEffect(() => {
+    if (matches.size === pairs.length && matches.size > 0) {
+      // Set shuffle to original order so pairs line up
+      setTimeout(() => {
+        setLocalShuffle(Array.from({ length: pairs.length }, (_, i) => i));
+      }, 500); // Small delay for smooth transition
+    }
+  }, [matches.size, pairs.length]);
+  
   const handleTermClick = (e: React.MouseEvent, termIdx: number) => {
     e.stopPropagation();
     if (selectedTerm === termIdx) {
@@ -304,6 +314,8 @@ Process of breaking down glucose to release energy`}
             const isMatched = Array.from(matches.values()).includes(displayPosition);
             const isSelected = selectedDesc === displayPosition;
             
+            // Find which term this is matched to (if any) for color
+            // Match by the ORIGINAL index, not display position
             let matchedTermIdx: number | null = null;
             for (const [termIdx, descDisplayPos] of matches.entries()) {
               if (descDisplayPos === displayPosition) {
@@ -312,7 +324,8 @@ Process of breaking down glucose to release energy`}
               }
             }
             
-            const colors = matchedTermIdx !== null ? getMatchColor(matchedTermIdx) : null;
+            // Use the ORIGINAL index for color so it stays with the description
+            const colors = isMatched ? getMatchColor(originalIdx) : null;
             
             return (
               <button
