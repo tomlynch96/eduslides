@@ -165,6 +165,7 @@ export interface MatchBlockInstance extends BlockInstance {
     terms: string[];          // Array of terms
     descriptions: string[];   // Array of descriptions (same order as terms)
     shuffled?: number[];      // Indices for shuffled descriptions (set on first view)
+    instructions?: string; 
   };
 }
 

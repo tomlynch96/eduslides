@@ -272,6 +272,7 @@ blockRegistry.register(
         terms: [''],
         descriptions: [''],
         shuffled: undefined,
+        instructions: '',
       },
     }),
     

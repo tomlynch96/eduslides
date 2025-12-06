@@ -52,7 +52,7 @@ export function UniversalBlockRenderer({
         className={`relative h-full w-full group ${isEditable ? 'cursor-pointer hover:ring-2 hover:ring-blue-400 rounded transition-all' : ''}`}
         onClick={() => isEditable && setIsEditModalOpen(true)}
       >
-        <ScalingBlockWrapper disabled={block.type === 'match'}>
+        <ScalingBlockWrapper>
           <Component
             block={block}
             mode="view"
