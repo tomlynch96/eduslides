@@ -1,5 +1,6 @@
 // ============================================
-// CLOZE BLOCK RENDERER (Registry-Compatible)
+// CLOZE BLOCK RENDERER - REDESIGNED
+// Content-First, Bigger Text, Warm Pastels
 // ============================================
 
 import { useState } from 'react';
@@ -55,6 +56,10 @@ export function ClozeBlockRenderer({
   if (mode === 'edit') {
     return (
       <div className="p-6 border-2 border-blue-500 bg-blue-50 rounded space-y-4">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          Edit Cloze (Fill in Blanks)
+        </h3>
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Text Content
@@ -111,7 +116,7 @@ export function ClozeBlockRenderer({
     );
   }
 
-  // VIEW MODE
+  // VIEW MODE - Content-first, bigger text
   if (!text.trim()) {
     return (
       <div className="p-6">
@@ -125,36 +130,38 @@ export function ClozeBlockRenderer({
   const hasBlanks = blankedIndices.length > 0;
 
   return (
-    <div className="p-6">
+    <div className="p-4 bg-orange-50 rounded-xl h-full flex flex-col">
+      {/* Hover controls - only show if there are blanks */}
       {hasBlanks && (
-        <div className="flex items-center justify-between mb-4">
-          <div className="text-sm text-gray-600">
-            {revealedBlanks.size} of {blankedIndices.length} revealed
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                revealAll();
-              }}
-              className="px-3 py-1 text-xs bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
-            >
-              Reveal All
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                hideAll();
-              }}
-              className="px-3 py-1 text-xs bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors"
-            >
-              Hide All
-            </button>
+        <div className="flex items-center justify-end mb-3 group">
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+            {revealedBlanks.size === blankedIndices.length ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  hideAll();
+                }}
+                className="px-3 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded transition-colors"
+              >
+                Hide All
+              </button>
+            ) : (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  revealAll();
+                }}
+                className="px-3 py-1 text-xs text-emerald-700 hover:bg-emerald-100 rounded transition-colors"
+              >
+                Reveal All
+              </button>
+            )}
           </div>
         </div>
       )}
 
-      <div className="text-xl leading-relaxed">
+      {/* Main text - bigger and clearer */}
+      <div className="text-3xl leading-relaxed text-gray-800 flex-1">
         {words.map((word, index) => {
           // Skip whitespace
           if (word.trim() === '') {
@@ -165,7 +172,7 @@ export function ClozeBlockRenderer({
           const isRevealed = revealedBlanks.has(index);
 
           if (isBlank && !isRevealed) {
-            // Show as blank
+            // Show as blank - softer colors
             return (
               <span
                 key={index}
@@ -173,7 +180,7 @@ export function ClozeBlockRenderer({
                   e.stopPropagation();
                   toggleReveal(index);
                 }}
-                className="inline-block border-b-2 border-blue-600 cursor-pointer hover:bg-blue-50 transition-colors mx-1"
+                className="inline-block border-b-4 border-amber-400 cursor-pointer hover:bg-amber-50 transition-colors mx-1"
                 style={{
                   minWidth: `${Math.max(word.length * 0.6, 3)}em`,
                   height: '1.5em',
@@ -183,7 +190,7 @@ export function ClozeBlockRenderer({
               />
             );
           } else if (isBlank && isRevealed) {
-            // Show revealed answer
+            // Show revealed answer - soft green
             return (
               <span
                 key={index}
@@ -191,7 +198,7 @@ export function ClozeBlockRenderer({
                   e.stopPropagation();
                   toggleReveal(index);
                 }}
-                className="bg-green-100 text-green-900 font-semibold px-2 py-1 rounded cursor-pointer hover:bg-green-200 transition-colors"
+                className="bg-emerald-50 text-gray-800 font-semibold px-2 py-1 rounded cursor-pointer hover:bg-emerald-100 transition-colors border-2 border-emerald-300"
               >
                 {word}
               </span>
