@@ -168,12 +168,32 @@ export interface MatchBlockInstance extends BlockInstance {
 //NEW SLIDE LAYOUT
 // Add this enum
 export enum SlideLayout {
+  // 1 block
   SINGLE = 'single',
-  TITLE_SINGLE = 'title-single',
+  
+  // 2 blocks
   TWO_HORIZONTAL = 'two-h',
   TWO_VERTICAL = 'two-v',
   SIDEBAR_LEFT = 'sidebar-l',
+  SIDEBAR_RIGHT = 'sidebar-r',
+  
+  // 3 blocks
+  THREE_COLUMNS = 'three-col',
+  THREE_ROWS = 'three-rows',
+  BIG_TOP = 'big-top',
+  BIG_BOTTOM = 'big-bottom',
+  SIDEBAR_LEFT_STACK = 'sidebar-l-stack',
+  SIDEBAR_RIGHT_STACK = 'sidebar-r-stack',
+  WIDE_LEFT_STACK = 'wide-l-stack',
+  WIDE_RIGHT_STACK = 'wide-r-stack',
+  
+  // 4 blocks
   GRID_2x2 = 'grid-2x2',
+  FOUR_COLUMNS = 'four-col',
+  FOUR_ROWS = 'four-rows',
+  
+  // Deprecated (keep for backward compatibility)
+  TITLE_SINGLE = 'title-single',
 }
 
 // Add SimpleSlide interface (move from App.tsx)

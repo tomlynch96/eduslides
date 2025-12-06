@@ -78,6 +78,12 @@ function App() {
   // ============================================
   
   const handleInsertBlock = (blockType: BlockTypeName) => {
+    // Block limit: max 4 blocks per slide
+    if (currentSlide.blockIds.length >= 4) {
+      alert('Maximum 4 blocks per slide. Create a new slide for more content.');
+      return;
+    }
+    
     const blockDef = blockRegistry.get(blockType);
     
     if (!blockDef) {
