@@ -30,16 +30,18 @@ export function MatchBlockRenderer({
   const [selectedDesc, setSelectedDesc] = useState<number | null>(null);
   const [matches, setMatches] = useState<Map<number, number>>(new Map());
   const [feedback, setFeedback] = useState<'correct' | 'incorrect' | null>(null);
-  const [localShuffle, setLocalShuffle] = useState<number[] | null>(null);
   
-  // Shuffle descriptions on first render in view mode
+  // Initialize shuffle - create on first render with pairs
+  const [localShuffle, setLocalShuffle] = useState<number[]>([]);
+  
+  // Update shuffle when pairs change
   useEffect(() => {
-    if (mode === 'view' && !localShuffle && pairs.length > 0) {
-      const shuffledIndices = Array.from({ length: pairs.length }, (_, i) => i)
+    if (pairs.length > 0 && localShuffle.length !== pairs.length) {
+      const shuffled = Array.from({ length: pairs.length }, (_, i) => i)
         .sort(() => Math.random() - 0.5);
-      setLocalShuffle(shuffledIndices);
+      setLocalShuffle(shuffled);
     }
-  }, [mode, localShuffle, pairs.length]);
+  }, [pairs.length]);
   
   const handleTermClick = (e: React.MouseEvent, termIdx: number) => {
     e.stopPropagation();
@@ -66,7 +68,7 @@ export function MatchBlockRenderer({
   };
   
   const checkMatch = (termIdx: number, descDisplayPos: number) => {
-    const shuffledDescIndices = localShuffle || Array.from({ length: pairs.length }, (_, i) => i);
+    const shuffledDescIndices = localShuffle;
     const descOriginalIdx = shuffledDescIndices[descDisplayPos];
     
     if (termIdx === descOriginalIdx) {
@@ -208,8 +210,13 @@ Process of breaking down glucose to release energy`}
     );
   }
 
+  // Wait for shuffle to initialize
+  if (localShuffle.length === 0) {
+    return <div className="p-8" />;
+  }
+
   const allMatched = matches.size === pairs.length;
-  const shuffledDescIndices = localShuffle || Array.from({ length: pairs.length }, (_, i) => i);
+  const shuffledDescIndices = localShuffle;
 
   // Soft pastel colors for matched pairs
   const pairColors = [
@@ -235,8 +242,8 @@ Process of breaking down glucose to release energy`}
           {instructions || 'Match'}
         </h3>
         
-        {/* Hover button */}
-        {matches.size > 0 && !allMatched && (
+        {/* Hover button - show when any matches exist */}
+        {matches.size > 0 && (
           <div className="opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={(e) => resetGame(e)}
@@ -257,19 +264,6 @@ Process of breaking down glucose to release energy`}
       {feedback === 'incorrect' && (
         <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-sm text-center">
           ✗ Try again
-        </div>
-      )}
-
-      {/* Victory message */}
-      {allMatched && (
-        <div className="mb-4 p-4 bg-emerald-50 border-2 border-emerald-300 rounded-lg text-center">
-          <p className="text-2xl font-bold text-emerald-700 mb-2">🎉 Complete!</p>
-          <button
-            onClick={(e) => resetGame(e)}
-            className="px-4 py-2 text-sm bg-emerald-600 hover:bg-emerald-700 text-white rounded transition-colors"
-          >
-            Play Again
-          </button>
         </div>
       )}
 
