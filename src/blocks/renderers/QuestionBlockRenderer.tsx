@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import type { BlockRendererProps } from '../../block-registry';
 import type { QuestionBlockInstance } from '../../types/core';
+import { ScalingBlockWrapper } from '../../components/ScalingBlockWrapper';
 
 export function QuestionBlockRenderer({
   block,
@@ -250,14 +251,14 @@ export function QuestionBlockRenderer({
         </div>
       </div>
 
-      {/* Fullscreen mode */}
+      {/* Fullscreen mode - with auto-scaling */}
       {isFullscreen && (
         <div 
           className="fixed inset-0 bg-white z-[100000] flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Top bar */}
-          <div className="bg-gray-800 text-white px-6 py-3 flex items-center justify-between">
+          {/* Top bar - fixed height */}
+          <div className="bg-gray-800 text-white px-6 py-3 flex items-center justify-between" style={{ height: '60px' }}>
             <div className="text-sm text-gray-300">
               Question {currentQuestionIndex + 1} of {questions.length}
             </div>
@@ -269,46 +270,50 @@ export function QuestionBlockRenderer({
             </button>
           </div>
 
-          {/* Main content area */}
-          <div className="flex-1 flex flex-col items-center justify-center p-12">
-            <div className="max-w-4xl w-full">
-              {/* Question */}
-              <div className="mb-12">
-                <div className="text-sm text-gray-500 mb-4 uppercase tracking-wide">
-                  Question
-                </div>
-                <div className="text-5xl font-bold text-gray-800 leading-tight">
-                  {questions[currentQuestionIndex]}
+          {/* Main content area - fills remaining space */}
+          <div className="flex-1 overflow-hidden">
+            <ScalingBlockWrapper>
+              <div className="p-8">
+                <div className="max-w-5xl mx-auto">
+                  {/* Question */}
+                  <div className="mb-8">
+                    <div className="text-sm text-gray-500 mb-3 uppercase tracking-wide">
+                      Question
+                    </div>
+                    <div className="text-5xl font-bold text-gray-800 leading-tight">
+                      {questions[currentQuestionIndex]}
+                    </div>
+                  </div>
+
+                  {/* Answer */}
+                  {showAnswerInFullscreen ? (
+                    <div className="p-6 bg-emerald-100 border-2 border-emerald-400 rounded-xl">
+                      <div className="text-sm text-emerald-700 mb-2 uppercase tracking-wide">
+                        Answer
+                      </div>
+                      <div className="text-3xl text-gray-800">
+                        {answers[currentQuestionIndex]}
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setShowAnswerInFullscreen(true)}
+                      className="px-6 py-3 text-sm bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg transition-colors font-medium"
+                    >
+                      Show Answer
+                    </button>
+                  )}
                 </div>
               </div>
-
-              {/* Answer */}
-              {showAnswerInFullscreen ? (
-                <div className="p-8 bg-emerald-100 border-2 border-emerald-400 rounded-xl">
-                  <div className="text-sm text-emerald-700 mb-3 uppercase tracking-wide">
-                    Answer
-                  </div>
-                  <div className="text-3xl text-gray-800">
-                    {answers[currentQuestionIndex]}
-                  </div>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowAnswerInFullscreen(true)}
-                  className="px-6 py-3 text-sm bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg transition-colors font-medium"
-                >
-                  Show Answer
-                </button>
-              )}
-            </div>
+            </ScalingBlockWrapper>
           </div>
 
-          {/* Bottom navigation */}
-          <div className="bg-gray-100 px-6 py-4 flex items-center justify-between border-t border-gray-200">
+          {/* Bottom navigation - fixed height */}
+          <div className="bg-gray-100 px-6 py-4 flex items-center justify-between border-t border-gray-200" style={{ height: '70px' }}>
             <button
               onClick={previousQuestion}
               disabled={currentQuestionIndex === 0}
-              className="px-4 py-2 text-xs bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed text-gray-700 rounded transition-colors"
+              className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded transition-colors"
             >
               ← Previous
             </button>
@@ -320,7 +325,7 @@ export function QuestionBlockRenderer({
             <button
               onClick={nextQuestion}
               disabled={currentQuestionIndex === questions.length - 1}
-              className="px-4 py-2 text-xs bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed text-gray-700 rounded transition-colors"
+              className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded transition-colors"
             >
               Next →
             </button>
