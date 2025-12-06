@@ -1,124 +1,93 @@
 import type { BlockInstance } from '../types/core';
+import { SlideLayout } from '../types/core';
 import { UniversalBlockRenderer } from './UniversalBlockRenderer';
-import { getCurrentLayout, getLayoutOptions } from '../utils/layoutEngine';
+import { LayoutSelector } from './LayoutSelector';
+import { LAYOUT_REGISTRY, assignBlocksToSlots } from '../layouts/layoutRegistry';
 
 interface SlideCanvasProps {
   blocks: BlockInstance[];
+  currentLayout: SlideLayout;
+  slideTitle?: string;
+  onLayoutChange: (newLayout: SlideLayout) => void;
+  onToggleTitle: () => void;
   onRemoveBlock: (blockId: string) => void;
   onUpdateBlock: (updatedBlock: BlockInstance) => void;
-  layout: 'auto' | 'vertical-stack';
-  layoutPattern: number;
-  hasTitleZone: boolean;
-  onChangeLayout: (pattern: number) => void;
-  onToggleLayoutMode: () => void;
-  onToggleTitleZone: () => void;
-  fullscreenBlockId: string | null;  
-  onToggleBlockFullscreen: (blockId: string) => void; 
+  fullscreenBlockId: string | null;
+  onToggleBlockFullscreen: (blockId: string) => void;
 }
 
-export function SlideCanvas({ 
-  blocks, 
+export function SlideCanvas({
+  blocks,
+  currentLayout,
+  slideTitle,
+  onLayoutChange,
+  onToggleTitle,
   onRemoveBlock,
   onUpdateBlock,
-  layout,
-  layoutPattern,
-  hasTitleZone,
-  onChangeLayout,
-  onToggleLayoutMode,
-  onToggleTitleZone,
-  fullscreenBlockId,  
-  onToggleBlockFullscreen
+  fullscreenBlockId,
+  onToggleBlockFullscreen,
 }: SlideCanvasProps) {
-  if (blocks.length === 0) {
+  
+  if (blocks.length === 0 && !slideTitle) {
     return (
       <div className="bg-white rounded-lg shadow-lg border-2 border-dashed border-gray-300 p-12 text-center min-h-[500px] flex items-center justify-center">
         <div>
-          <p className="text-gray-500 text-lg mb-2">
-            📄 Empty Slide
-          </p>
-          <p className="text-gray-400 text-sm">
-            Use Insert menu to add blocks to this slide
-          </p>
+          <p className="text-gray-500 text-lg mb-2">📄 Empty Slide</p>
+          <p className="text-gray-400 text-sm">Use Insert menu to add blocks or add a title</p>
         </div>
       </div>
     );
   }
 
+  const layoutDef = LAYOUT_REGISTRY[currentLayout];
   const blockIds = blocks.map(b => b.id);
-  
-  // If a block is fullscreened, only show that block at full size
-  const displayBlocks = fullscreenBlockId 
-    ? blocks.filter(b => b.id === fullscreenBlockId)
-    : blocks;
-  
-  const layoutPositions = fullscreenBlockId
-    ? [{ blockId: fullscreenBlockId, column: 1, columnSpan: 12, row: 1, rowSpan: 6 }]
-    : getCurrentLayout(blockIds, layout, layoutPattern, hasTitleZone);
-  
-  const layoutOptions = getLayoutOptions(blockIds, hasTitleZone);
+  const slotAssignment = assignBlocksToSlots(blockIds, layoutDef);
+
+  const displaySlots = fullscreenBlockId
+    ? [{ id: 'fullscreen', column: 1, columnSpan: 12, row: 1, rowSpan: 6 }]
+    : layoutDef.slots;
+
+  // Adjust row positions if title exists
+  const titleRowSpan = 1;
+  const contentStartRow = slideTitle ? 2 : 1;
+  const contentRowSpan = slideTitle ? 5 : 6;
 
   return (
     <div className="bg-white rounded-lg shadow-lg border border-gray-200">
-      {/* Header with layout controls */}
       <div className="p-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
         <h3 className="text-sm font-medium text-gray-700">
           📄 Slide Preview ({blocks.length} block{blocks.length !== 1 ? 's' : ''})
+          {slideTitle && <span className="text-xs text-gray-500 ml-2">• "{slideTitle}"</span>}
         </h3>
-        
+
         <div className="flex items-center gap-2">
-          {/* Title Zone toggle */}
+          {/* Title Toggle */}
           <button
-            onClick={onToggleTitleZone}
+            onClick={onToggleTitle}
             className={`px-3 py-1 text-xs rounded transition-colors ${
-              hasTitleZone 
+              slideTitle 
                 ? 'bg-purple-600 text-white' 
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
           >
-            {hasTitleZone ? '📋 Has Title' : '📋 Add Title'}
+            {slideTitle ? '📋 Edit Title' : '📋 Add Title'}
           </button>
 
           <span className="text-xs text-gray-300">|</span>
 
-          {/* Layout mode toggle */}
-          <button
-            onClick={onToggleLayoutMode}
-            className={`px-3 py-1 text-xs rounded transition-colors ${
-              layout === 'auto' 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            {layout === 'auto' ? 'Auto Layout' : 'Vertical Stack'}
-          </button>
-
-          {/* Layout pattern selector (only in auto mode) */}
-          {layout === 'auto' && layoutOptions.length > 1 && (
-            <>
-              <span className="text-xs text-gray-500">|</span>
-              <span className="text-xs text-gray-600">
-                {layoutOptions[layoutPattern]?.name || 'Layout'}
-              </span>
-              <button
-                onClick={() => onChangeLayout((layoutPattern + 1) % layoutOptions.length)}
-                className="px-3 py-1 text-xs bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
-              >
-                Try Different Layout
-              </button>
-            </>
-          )}
+          <LayoutSelector
+            currentLayout={currentLayout}
+            blockCount={blocks.length}
+            onLayoutChange={onLayoutChange}
+          />
         </div>
       </div>
-      
-      {/* Fixed 16:9 Canvas Container */}
-      {/* Fixed 16:9 Canvas Container */}
-      <div 
+
+      <div
         className="relative w-full bg-gray-100"
-        style={{
-          paddingBottom: '56.25%',
-        }}
+        style={{ paddingBottom: '56.25%' }}
       >
-        <div 
+        <div
           className="absolute inset-0 bg-white"
           style={{
             display: 'grid',
@@ -128,18 +97,46 @@ export function SlideCanvas({
             padding: '2rem',
           }}
         >
-          {layoutPositions.map((position) => {
-            const block = displayBlocks.find(b => b.id === position.blockId);
+          {/* Render title if exists */}
+          {!fullscreenBlockId && slideTitle && (
+            <div
+              className="flex items-center justify-center text-2xl font-bold text-gray-800 bg-gray-50 rounded border-2 border-dashed border-gray-300"
+              style={{
+                gridColumn: '1 / span 12',
+                gridRow: '1 / span 1',
+              }}
+            >
+              {slideTitle}
+            </div>
+          )}
+
+          {/* Render content blocks */}
+          {displaySlots.map((slot) => {
+            const blockId = fullscreenBlockId || slotAssignment.get(slot.id);
+            const block = blocks.find(b => b.id === blockId);
+            
             if (!block) return null;
+
+            // Adjust slot positions if title exists
+            const adjustedRow = fullscreenBlockId 
+              ? slot.row 
+              : slideTitle 
+                ? slot.row + 1 
+                : slot.row;
+            
+            const adjustedRowSpan = fullscreenBlockId
+              ? slot.rowSpan
+              : slideTitle && slot.row === 1
+                ? Math.min(slot.rowSpan, contentRowSpan)
+                : slot.rowSpan;
 
             return (
               <div
-                key={position.blockId}
+                key={slot.id}
                 className="overflow-hidden"
                 style={{
-                  gridColumn: `${position.column} / span ${position.columnSpan}`,
-                  gridRow: `${position.row} / span ${position.rowSpan}`,
-                  height: '100%',
+                  gridColumn: `${slot.column} / span ${slot.columnSpan}`,
+                  gridRow: `${adjustedRow} / span ${adjustedRowSpan}`,
                 }}
               >
                 <UniversalBlockRenderer
