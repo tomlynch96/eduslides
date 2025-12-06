@@ -104,7 +104,7 @@ export function PresentationView({
       </div>
 
       {/* Slide Content */}
-      {currentBlocks.length === 0 ? (
+      {currentBlocks.length === 0 && !currentSlide.title ? (
         // Empty slide state
         <div className="flex items-center justify-center h-full text-gray-400 text-4xl">
           Empty slide
@@ -127,13 +127,38 @@ export function PresentationView({
               padding: '2rem',
             }}
           >
-            {/* Render each block in its assigned slot */}
+            {/* Render title if exists */}
+            {!fullscreenBlockId && currentSlide.title && (
+              <div
+                className="flex items-center justify-center text-4xl font-bold text-gray-800"
+                style={{
+                  gridColumn: '1 / span 12',
+                  gridRow: '1 / span 1',
+                }}
+              >
+                {currentSlide.title}
+              </div>
+            )}
+
+            {/* Render content blocks */}
             {layoutSlots.map((slot) => {
-              // Get the block ID for this slot (or fullscreen block)
               const blockId = fullscreenBlockId || slotAssignment.get(slot.id);
               const block = displayBlocks.find(b => b.id === blockId);
               
               if (!block) return null;
+
+              // Adjust slot positions if title exists
+              const adjustedRow = fullscreenBlockId 
+                ? slot.row 
+                : currentSlide.title 
+                  ? slot.row + 1 
+                  : slot.row;
+              
+              const adjustedRowSpan = fullscreenBlockId
+                ? slot.rowSpan
+                : currentSlide.title && slot.row === 1
+                  ? Math.min(slot.rowSpan, 5)
+                  : slot.rowSpan;
 
               return (
                 <div
@@ -141,7 +166,7 @@ export function PresentationView({
                   className="presentation-block"
                   style={{
                     gridColumn: `${slot.column} / span ${slot.columnSpan}`,
-                    gridRow: `${slot.row} / span ${slot.rowSpan}`,
+                    gridRow: `${adjustedRow} / span ${adjustedRowSpan}`,
                     height: '100%',
                     overflow: 'hidden'
                   }}

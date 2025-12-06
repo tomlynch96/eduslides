@@ -101,7 +101,7 @@ function App() {
     updatedSlides[currentSlideIndex] = {
       ...currentSlide,
       blockIds: newBlockIds,
-      layout: getDefaultLayout(newBlockIds.length) // Auto-select layout based on block count
+      layout: getDefaultLayout(newBlockIds.length)
     };
     
     setSlides(updatedSlides);
@@ -142,7 +142,35 @@ function App() {
     };
     setSlides(updatedSlides);
   };
+  // ============================================
+  // TITLE ZONE HANDLER
+  // ============================================
 
+  const handleToggleTitle = () => {
+    const updatedSlides = [...slides];
+    
+    if (!currentSlide.title) {
+      // Add title
+      const titleText = prompt('Enter slide title:');
+      if (titleText && titleText.trim()) {
+        updatedSlides[currentSlideIndex] = {
+          ...currentSlide,
+          title: titleText.trim()
+        };
+        setSlides(updatedSlides);
+      }
+    } else {
+      // Remove title
+      if (confirm('Remove slide title?')) {
+        updatedSlides[currentSlideIndex] = {
+          ...currentSlide,
+          title: undefined
+        };
+        setSlides(updatedSlides);
+      }
+    }
+  };
+  
   // ============================================
   // SLIDE NAVIGATION HANDLERS
   // ============================================
@@ -215,7 +243,8 @@ function App() {
     setSlides(lesson.slides.map(slide => ({
       id: slide.id,
       blockIds: [...slide.blockIds],
-      layout: slide.layout
+      layout: slide.layout || SlideLayout.SINGLE,
+      title: slide.title
     })));
     
     // Load objectives
@@ -319,7 +348,8 @@ function App() {
       setSlides(importData.slides.map(slide => ({
         id: slide.id,
         blockIds: [...slide.blockIds],
-        layout: SlideLayout.SINGLE
+        layout: SlideLayout.SINGLE,
+        title: undefined
       })));
 
       // Import objectives
@@ -433,7 +463,9 @@ function App() {
           <SlideCanvas
             blocks={currentSlideBlocks}
             currentLayout={currentSlide.layout}
+            slideTitle={currentSlide.title}
             onLayoutChange={handleLayoutChange}
+            onToggleTitle={handleToggleTitle}
             onRemoveBlock={handleRemoveFromSlide}
             onUpdateBlock={handleUpdateBlock}
             fullscreenBlockId={fullscreenBlockId}

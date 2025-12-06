@@ -82,8 +82,8 @@ export const LAYOUT_REGISTRY: Record<SlideLayout, LayoutDefinition> = {
 };
 
 export function getLayoutsForBlockCount(blockCount: number): LayoutDefinition[] {
-  return Object.values(LAYOUT_REGISTRY).filter(
-    layout => blockCount >= layout.minBlocks && blockCount <= layout.maxBlocks
+  return Object.values(LAYOUT_REGISTRY).filter(layout => 
+    blockCount >= layout.minBlocks && blockCount <= layout.maxBlocks
   );
 }
 
@@ -99,10 +99,12 @@ export function assignBlocksToSlots(
   layout: LayoutDefinition
 ): Map<string, string> {
   const assignment = new Map<string, string>();
+  
   layout.slots.forEach((slot, index) => {
     if (blockIds[index]) {
       assignment.set(slot.id, blockIds[index]);
     }
   });
+  
   return assignment;
 }

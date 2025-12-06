@@ -181,6 +181,7 @@ export interface SimpleSlide {
   id: string;
   blockIds: string[];
   layout: SlideLayout;
+  title?: string;  // Simple string title
 }
 
 // Add these new interfaces

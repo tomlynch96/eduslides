@@ -146,7 +146,8 @@ export interface SimpleLessonData {
   slides: Array<{
     id: string;
     blockIds: string[];
-    layout: SlideLayout;  // Changed from 'auto' | 'vertical-stack'
+    layout: SlideLayout;
+    title?: string;
   }>;
   objectives?: Array<{
     id: string;
