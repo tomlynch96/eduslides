@@ -259,6 +259,7 @@ export function ClozeBlockRenderer({
           <div className="text-sm text-gray-600 mb-2">Word bank:</div>
           <div className="flex flex-wrap gap-2">
             {blankedIndices
+              .filter(idx => !revealedBlanks.has(idx)) // Hide revealed words
               .map(idx => words[idx])
               .sort(() => Math.random() - 0.5) // Shuffle
               .map((word, idx) => (
@@ -270,6 +271,11 @@ export function ClozeBlockRenderer({
                 </span>
               ))}
           </div>
+          {revealedBlanks.size > 0 && revealedBlanks.size < blankedIndices.length && (
+            <div className="text-xs text-gray-500 mt-2">
+              {blankedIndices.length - revealedBlanks.size} word(s) remaining
+            </div>
+          )}
         </div>
       )}
     </div>
