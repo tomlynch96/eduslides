@@ -243,7 +243,10 @@ The distance between successive peaks of a wave"
 
       {/* Fullscreen mode - full redesign */}
       {isFullscreen && (
-        <div className="fixed inset-0 bg-amber-50 z-[100000] flex flex-col">
+        <div 
+          className="fixed inset-0 bg-white z-[100000] flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Top bar - discreet */}
           <div className="bg-gray-800 text-white px-6 py-3 flex items-center justify-between">
             <div className="text-sm text-gray-300">
