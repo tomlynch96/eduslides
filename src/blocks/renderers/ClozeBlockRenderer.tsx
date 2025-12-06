@@ -94,8 +94,26 @@ export function ClozeBlockRenderer({
             placeholder="Enter your text here. After saving, click on words to turn them into blanks."
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={6}
-            autoFocus
           />
+        </div>
+
+        {/* Show word list option */}
+        <div>
+          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={block.content.showWordList || false}
+              onChange={(e) => onContentChange?.({
+                ...block.content,
+                showWordList: e.target.checked,
+              })}
+              className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+            />
+            <span>Show jumbled word list below text</span>
+          </label>
+          <p className="text-xs text-gray-500 mt-1 ml-6">
+            Displays all blanked words in random order at the bottom
+          </p>
         </div>
 
         {text.trim() && (
@@ -234,6 +252,26 @@ export function ClozeBlockRenderer({
           }
         })}
       </div>
+
+      {/* Jumbled word list - if enabled */}
+      {block.content.showWordList && hasBlanks && (
+        <div className="mt-4 pt-4 border-t-2 border-orange-200">
+          <div className="text-sm text-gray-600 mb-2">Word bank:</div>
+          <div className="flex flex-wrap gap-2">
+            {blankedIndices
+              .map(idx => words[idx])
+              .sort(() => Math.random() - 0.5) // Shuffle
+              .map((word, idx) => (
+                <span
+                  key={idx}
+                  className="px-3 py-1.5 bg-amber-100 text-gray-800 rounded-lg text-lg border border-amber-300"
+                >
+                  {word}
+                </span>
+              ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

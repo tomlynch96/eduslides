@@ -237,6 +237,7 @@ blockRegistry.register(
         text: '',
         blankedIndices: [],
         instructions: '',  // NEW: Initialize with empty string
+        showWordList: false,
       },
     }),
     
