@@ -1,6 +1,5 @@
 // ============================================
-// QUESTION BLOCK RENDERER - REDESIGNED
-// Content-First, Discreet Controls, Warm Pastels
+// QUESTION BLOCK RENDERER - with Instructions Field
 // ============================================
 
 import { useState } from 'react';
@@ -12,7 +11,7 @@ export function QuestionBlockRenderer({
   mode,
   onContentChange,
 }: BlockRendererProps<QuestionBlockInstance>) {
-  const { questions, answers } = block.content;
+  const { questions, answers, instructions } = block.content;
   
   // View mode state
   const [revealedAnswers, setRevealedAnswers] = useState<Set<number>>(new Set());
@@ -91,6 +90,26 @@ export function QuestionBlockRenderer({
         </h3>
 
         <div className="space-y-4">
+          {/* Instructions field */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Instructions (optional)
+            </label>
+            <input
+              type="text"
+              value={instructions || ''}
+              onChange={(e) => onContentChange?.({
+                ...block.content,
+                instructions: e.target.value,
+              })}
+              placeholder="e.g., Answer the following questions in complete sentences"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Leave blank to show default "Questions & Answers"
+            </p>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Questions (one per line)
@@ -98,10 +117,7 @@ export function QuestionBlockRenderer({
             <textarea
               value={questionsText}
               onChange={(e) => handleQuestionsTextChange(e.target.value)}
-              placeholder="Enter questions, one per line:
-What is the speed of light?
-What is Newton's first law?
-Define wavelength."
+              placeholder="Enter questions, one per line"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
               rows={8}
               autoFocus
@@ -118,21 +134,14 @@ Define wavelength."
             <textarea
               value={answersText}
               onChange={(e) => handleAnswersTextChange(e.target.value)}
-              placeholder="Enter answers, one per line:
-299,792,458 m/s
-An object at rest stays at rest unless acted upon by a force
-The distance between successive peaks of a wave"
+              placeholder="Enter answers, one per line"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
               rows={8}
             />
             <p className="text-xs text-gray-500 mt-1">
               {answers.filter(a => a.trim()).length} answer(s)
             </p>
-          </div>
-
-          <div className="p-3 bg-yellow-50 border border-yellow-200 rounded">
-            <p className="text-sm text-yellow-800">
-              ⚠️ Make sure you have the same number of questions and answers.
+            <p className="text-xs text-gray-400 mt-2">
               Each answer should correspond to the question in the same position.
             </p>
           </div>
@@ -144,11 +153,11 @@ The distance between successive peaks of a wave"
   // VIEW MODE - Ultra-compact with hover controls
   return (
     <>
-      <div className="p-4 bg-amber-50 rounded-xl h-full flex flex-col" style={{ maxWidth: 'none', width: '100%' }}>
-        {/* Header - compact with hover-only controls */}
+      <div className="p-4 bg-white rounded-xl h-full flex flex-col" style={{ maxWidth: 'none', width: '100%' }}>
+        {/* Header - shows custom instructions or default title */}
         <div className="flex items-center justify-between mb-3 group">
-          <h3 className="text-xl font-bold text-gray-900">
-            Questions & Answers
+          <h3 className="text-xl font-bold text-gray-800">
+            {instructions || 'Questions & Answers'}
           </h3>
           
           {/* Controls appear on hover */}
@@ -184,7 +193,7 @@ The distance between successive peaks of a wave"
             return (
               <div
                 key={index}
-                className="group relative bg-white rounded-lg px-3 py-2.5 hover:shadow-md transition-shadow border border-amber-100"
+                className="group relative bg-amber-50 rounded-lg px-3 py-2.5 hover:shadow-md transition-shadow border border-amber-200"
                 style={{ width: '100%', maxWidth: 'none' }}
               >
                 {/* Inline layout: number + question on same line */}
@@ -196,7 +205,7 @@ The distance between successive peaks of a wave"
                   
                   {/* Question text - takes all remaining space */}
                   <div className="flex-1 min-w-0">
-                    <div className="text-3xl font-medium text-gray-900 leading-tight">
+                    <div className="text-3xl font-medium text-gray-800 leading-tight">
                       {question}
                     </div>
 
@@ -241,13 +250,13 @@ The distance between successive peaks of a wave"
         </div>
       </div>
 
-      {/* Fullscreen mode - full redesign */}
+      {/* Fullscreen mode */}
       {isFullscreen && (
         <div 
           className="fixed inset-0 bg-white z-[100000] flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Top bar - discreet */}
+          {/* Top bar */}
           <div className="bg-gray-800 text-white px-6 py-3 flex items-center justify-between">
             <div className="text-sm text-gray-300">
               Question {currentQuestionIndex + 1} of {questions.length}
@@ -260,7 +269,7 @@ The distance between successive peaks of a wave"
             </button>
           </div>
 
-          {/* Main content area - question is HUGE */}
+          {/* Main content area */}
           <div className="flex-1 flex flex-col items-center justify-center p-12">
             <div className="max-w-4xl w-full">
               {/* Question */}
@@ -268,7 +277,7 @@ The distance between successive peaks of a wave"
                 <div className="text-sm text-gray-500 mb-4 uppercase tracking-wide">
                   Question
                 </div>
-                <div className="text-5xl font-bold text-gray-900 leading-tight">
+                <div className="text-5xl font-bold text-gray-800 leading-tight">
                   {questions[currentQuestionIndex]}
                 </div>
               </div>
@@ -279,7 +288,7 @@ The distance between successive peaks of a wave"
                   <div className="text-sm text-emerald-700 mb-3 uppercase tracking-wide">
                     Answer
                   </div>
-                  <div className="text-3xl text-gray-900">
+                  <div className="text-3xl text-gray-800">
                     {answers[currentQuestionIndex]}
                   </div>
                 </div>
@@ -294,7 +303,7 @@ The distance between successive peaks of a wave"
             </div>
           </div>
 
-          {/* Bottom navigation - discreet */}
+          {/* Bottom navigation */}
           <div className="bg-gray-100 px-6 py-4 flex items-center justify-between border-t border-gray-200">
             <button
               onClick={previousQuestion}

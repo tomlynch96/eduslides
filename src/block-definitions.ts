@@ -145,6 +145,7 @@ blockRegistry.register(
       content: {
         questions: [''],
         answers: [''],
+        instructions: '',  // NEW: Initialize with empty string
       },
     }),
     

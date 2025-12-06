@@ -147,6 +147,7 @@ export interface QuestionBlockInstance extends BlockInstance {
   content: {
     questions: string[];  // Array of questions
     answers: string[];    // Array of corresponding answers
+    instructions?: string;  // NEW: Optional instructions
   };
 }
 export interface ClozeBlockInstance extends BlockInstance {
