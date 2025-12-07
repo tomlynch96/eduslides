@@ -228,7 +228,7 @@ Process of breaking down glucose to release energy`}
   const allMatched = matches.size === pairs.length;
   const shuffledDescIndices = localShuffle;
 
-  // Soft pastel colors for matched pairs
+  // Varied soft pastel colors for matched pairs
   const pairColors = [
     { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-gray-800' },
     { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-gray-800' },
@@ -245,9 +245,9 @@ Process of breaking down glucose to release energy`}
   };
 
   return (
-    <div className="p-4 bg-rose-50 rounded-xl h-full flex flex-col">
+    <div className="p-2 bg-white rounded-xl h-full w-full flex flex-col">
       {/* Header with instructions */}
-      <div className="flex items-center justify-between mb-4 group">
+      <div className="flex items-center justify-between mb-2 group">
         <h3 className="text-3xl font-bold text-gray-800">
           {instructions || 'Match'}
         </h3>
@@ -277,8 +277,8 @@ Process of breaking down glucose to release energy`}
         </div>
       )}
 
-      {/* The matching interface - bigger text */}
-      <div className="grid grid-cols-2 gap-3 flex-1">
+      {/* The matching interface - bigger gap between columns */}
+      <div className="grid grid-cols-2 gap-6 flex-1">
         {/* Terms column */}
         <div className="space-y-2">
           {pairs.map((pair, i) => {
@@ -292,12 +292,12 @@ Process of breaking down glucose to release energy`}
                 onClick={(e) => handleTermClick(e, i)}
                 disabled={isMatched}
                 className={`
-                  w-full px-3 py-2 rounded-lg text-left font-medium transition-all text-xl
+                  w-full px-2 py-1.5 rounded-lg text-left font-medium transition-all text-3xl leading-tight
                   ${isMatched 
                     ? `${colors.bg} ${colors.text} border-2 ${colors.border} cursor-default` 
                     : isSelected
                     ? 'bg-blue-500 text-white border-2 border-blue-600'
-                    : 'bg-white border-2 border-gray-200 hover:border-blue-400 cursor-pointer'
+                    : 'bg-orange-50 border-2 border-orange-200 hover:border-blue-400 cursor-pointer text-gray-800'
                   }
                 `}
               >
@@ -315,7 +315,6 @@ Process of breaking down glucose to release energy`}
             const isSelected = selectedDesc === displayPosition;
             
             // Find which term this is matched to (if any) for color
-            // Match by the ORIGINAL index, not display position
             let matchedTermIdx: number | null = null;
             for (const [termIdx, descDisplayPos] of matches.entries()) {
               if (descDisplayPos === displayPosition) {
@@ -324,8 +323,11 @@ Process of breaking down glucose to release energy`}
               }
             }
             
-            // Use the ORIGINAL index for color so it stays with the description
-            const colors = isMatched ? getMatchColor(originalIdx) : null;
+            // When all matched and realigned, use the display position (which matches term position)
+            // Otherwise use the matched term index
+            const allMatched = matches.size === pairs.length;
+            const colorIndex = allMatched ? displayPosition : matchedTermIdx;
+            const colors = colorIndex !== null ? getMatchColor(colorIndex) : null;
             
             return (
               <button
@@ -333,12 +335,12 @@ Process of breaking down glucose to release energy`}
                 onClick={(e) => handleDescClick(e, displayPosition)}
                 disabled={isMatched}
                 className={`
-                  w-full px-3 py-2 rounded-lg text-left font-medium transition-all text-xl
+                  w-full px-2 py-1.5 rounded-lg text-left font-medium transition-all text-3xl leading-tight
                   ${isMatched && colors
                     ? `${colors.bg} ${colors.text} border-2 ${colors.border} cursor-default` 
                     : isSelected
                     ? 'bg-blue-500 text-white border-2 border-blue-600'
-                    : 'bg-white border-2 border-gray-200 hover:border-blue-400 cursor-pointer'
+                    : 'bg-amber-50 border-2 border-amber-200 hover:border-blue-400 cursor-pointer text-gray-800'
                   }
                 `}
               >
