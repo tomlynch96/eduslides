@@ -210,7 +210,6 @@ blockRegistry.register(
       content: {
         resourceId: '',
         caption: '',
-        width: undefined,
       },
     }),
     

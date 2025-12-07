@@ -123,7 +123,6 @@ export interface ImageBlockInstance extends BlockInstance {
   content: {
     resourceId: string; // References global resource dictionary
     caption?: string;
-    width?: number;
   };
 }
 
