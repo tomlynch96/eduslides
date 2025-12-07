@@ -1,7 +1,9 @@
 // ============================================
-// OBJECTIVES BLOCK RENDERER (Registry-Compatible)
+// OBJECTIVES BLOCK RENDERER - REDESIGNED
+// Content-First, Celebration on Completion
 // ============================================
 
+import { useState, useEffect } from 'react';
 import type { BlockRendererProps } from '../../block-registry';
 import type { ObjectivesBlockInstance } from '../../types/core';
 import { useLessonContext } from '../../LessonContext';
@@ -11,21 +13,54 @@ export function ObjectivesBlockRenderer({
   mode,
   onContentChange,
 }: BlockRendererProps<ObjectivesBlockInstance>) {
-  const { showCheckboxes } = block.content;
+  const { showCheckboxes, instructions } = block.content;
   const { lessonObjectives, completedObjectives, onToggleObjective } = useLessonContext();
+  
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [previousCompletedCount, setPreviousCompletedCount] = useState(0);
 
-  // Add this debug line:
-  console.log('ObjectivesBlock - lessonObjectives:', lessonObjectives);
+  const completedCount = completedObjectives.length;
+  const totalCount = lessonObjectives?.length || 0;
+  const allCompleted = totalCount > 0 && completedCount === totalCount;
+
+  // Trigger celebration when all objectives are completed
+  useEffect(() => {
+    if (allCompleted && previousCompletedCount < totalCount) {
+      setShowCelebration(true);
+      setTimeout(() => setShowCelebration(false), 3000);
+    }
+    setPreviousCompletedCount(completedCount);
+  }, [completedCount, totalCount, allCompleted]);
 
   // EDIT MODE
   if (mode === 'edit') {
     return (
       <div className="p-6 border-2 border-blue-500 bg-blue-50 rounded">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
-          Edit Objectives Block Settings
+          Edit Objectives Block
         </h3>
 
         <div className="space-y-4">
+          {/* Instructions field */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Instructions (optional)
+            </label>
+            <input
+              type="text"
+              value={instructions || ''}
+              onChange={(e) => onContentChange?.({
+                ...block.content,
+                instructions: e.target.value,
+              })}
+              placeholder="e.g., By the end of this lesson, you will be able to..."
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Leave blank to show default "Learning Objectives"
+            </p>
+          </div>
+
           <div className="p-4 bg-white rounded-lg border border-gray-200">
             <p className="text-sm text-gray-700 mb-2">
               This block displays the lesson-level objectives you set in the top menu bar.
@@ -58,56 +93,57 @@ export function ObjectivesBlockRenderer({
   // VIEW MODE
   if (!lessonObjectives || lessonObjectives.length === 0) {
     return (
-      <div className="p-6">
-        <h3 className="text-2xl font-bold text-gray-900 mb-4">
-          Learning Objectives
-        </h3>
-        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-sm text-gray-700">
-            No objectives set for this lesson. Use the "Objectives" button in the top menu to add objectives.
-          </p>
+      <div className="p-4 bg-white h-full flex items-center justify-center">
+        <div className="text-center text-gray-400">
+          <div className="text-6xl mb-2">🎯</div>
+          <p className="text-lg">No objectives set</p>
         </div>
       </div>
     );
   }
 
-  const completedCount = completedObjectives.length;
-  const totalCount = lessonObjectives.length;
-  const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
-
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-2xl font-bold text-gray-900">
-          Learning Objectives
+    <div className="p-4 bg-white h-full flex flex-col relative">
+      {/* Header */}
+      <div className="mb-3">
+        <h3 className="text-3xl font-bold text-gray-800">
+          {instructions || 'Learning Objectives'}
         </h3>
-        {showCheckboxes && (
-          <div className="text-sm text-gray-600">
-            {completedCount} of {totalCount} completed
-          </div>
-        )}
       </div>
 
+      {/* Progress bar - shows when checkboxes enabled */}
       {showCheckboxes && (
         <div className="mb-4">
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
             <div
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${progress}%` }}
+              className={`h-3 rounded-full transition-all duration-500 ${
+                allCompleted ? 'bg-emerald-500' : 'bg-blue-500'
+              }`}
+              style={{ width: `${totalCount > 0 ? (completedCount / totalCount) * 100 : 0}%` }}
             />
           </div>
         </div>
       )}
 
-      <div className="space-y-3">
+      {/* Well done message */}
+      {showCelebration && (
+        <div className="mb-3 p-3 bg-emerald-50 border-2 border-emerald-300 rounded-lg text-center animate-pulse">
+          <p className="text-2xl font-bold text-emerald-700">🎉 Well done! All objectives complete!</p>
+        </div>
+      )}
+
+      {/* Objectives list */}
+      <div className="space-y-3 flex-1">
         {lessonObjectives.map((objective) => {
           const isCompleted = completedObjectives.includes(objective.id);
           
           return (
             <div
               key={objective.id}
-              className={`flex items-start gap-3 p-3 rounded-lg transition-colors ${
-                isCompleted ? 'bg-green-50' : 'bg-gray-50'
+              className={`flex items-start gap-3 px-4 py-3 rounded-lg transition-all border-2 ${
+                isCompleted 
+                  ? 'bg-emerald-50 border-emerald-200' 
+                  : 'bg-amber-50 border-amber-200'
               }`}
             >
               {showCheckboxes ? (
@@ -118,15 +154,15 @@ export function ObjectivesBlockRenderer({
                     e.stopPropagation();
                     onToggleObjective(objective.id);
                   }}
-                  className="mt-1 w-5 h-5 text-green-600 rounded focus:ring-2 focus:ring-green-500 cursor-pointer"
+                  className="mt-1.5 w-6 h-6 text-emerald-600 rounded focus:ring-2 focus:ring-emerald-500 cursor-pointer flex-shrink-0"
                   onClick={(e) => e.stopPropagation()} 
                 />
               ) : (
-                <span className="mt-1 text-blue-600 font-bold">•</span>
+                <span className="mt-1 text-amber-500 font-bold text-2xl flex-shrink-0">•</span>
               )}
               
-              <span className={`flex-1 text-gray-800 ${
-                isCompleted ? 'line-through text-gray-500' : ''
+              <span className={`flex-1 text-3xl leading-tight ${
+                isCompleted ? 'line-through text-gray-500' : 'text-gray-800'
               }`}>
                 {objective.text}
               </span>

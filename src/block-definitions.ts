@@ -120,6 +120,7 @@ blockRegistry.register(
       content: {
         objectives: [],
         showCheckboxes: true,
+        instructions: '',
       },
     }),
     

@@ -131,6 +131,7 @@ export interface ObjectivesBlockInstance extends BlockInstance {
   content: {
     objectives: string[];
     showCheckboxes: boolean;
+    instructions?: string; 
   };
 }
 
