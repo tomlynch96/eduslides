@@ -14,6 +14,7 @@ export interface SlideTemplate {
   name: string;
   description?: string;
   layout: SlideLayout;
+  hasTitle: boolean;  // NEW: Whether this slide template includes a title
   blocks: Array<{
     type: string;
     templateContent: Record<string, any>; // Only templateable fields
@@ -60,6 +61,7 @@ export function createTemplateFromSlide(
     name: templateName,
     description,
     layout: slide.layout,
+    hasTitle: !!slide.title,  // NEW: Store whether slide has a title
     blocks: templateBlocks,
     createdAt: new Date().toISOString(),
   };
@@ -105,6 +107,7 @@ export function createSlideFromTemplate(
     id: `slide-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     blockIds: newBlocks.map(b => b.id),
     layout: template.layout,
+    title: template.hasTitle ? '' : undefined,  // NEW: Add empty title if template had one
   };
   
   return { slide: newSlide, blocks: newBlocks };
