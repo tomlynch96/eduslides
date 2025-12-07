@@ -5,8 +5,9 @@ import { ObjectivesModal } from './ObjectivesModal';
 import { SaveLessonModal } from './SaveLessonModal';
 import type { SimpleLessonData } from '../storage/storage';
 import type { BlockTypeName } from '../types/core';  // ADD THIS LINE
-import type { BlockInstance } from '../types/core';
 import { InsertBlockMenu } from './InsertBlockMenu';
+import { NewSlideDropdown } from './NewSlideDropdown';
+import type { SimpleSlide, BlockInstance } from '../types/core';
 
 interface TopMenuBarProps {
   currentLessonName: string | null;
@@ -28,6 +29,7 @@ interface TopMenuBarProps {
   onDeleteSlide: () => void;
   onPresent: () => void;
   onInsertBlock: (blockType: BlockInstance) => void;  // Change from string
+  onNewSlideFromTemplate: (slide: SimpleSlide, blocks: BlockInstance[]) => void;  // ADD THIS
 }
 
 export function TopMenuBar({
@@ -47,6 +49,7 @@ export function TopMenuBar({
   onPreviousSlide,
   onNextSlide,
   onNewSlide,
+  onNewSlideFromTemplate,
   onDeleteSlide,
   onPresent,
   onInsertBlock,
@@ -141,12 +144,10 @@ export function TopMenuBar({
 
             <div className="w-px h-6 bg-gray-300 mx-2" />
 
-            <button
-              onClick={onNewSlide}
-              className="px-3 py-1.5 text-sm bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
-            >
-              New Slide
-            </button>
+            <NewSlideDropdown
+              onCreateBlankSlide={onNewSlide}
+              onCreateSlideFromTemplate={onNewSlideFromTemplate}
+            />
 
             <button
               onClick={onDeleteSlide}

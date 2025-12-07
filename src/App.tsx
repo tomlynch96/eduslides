@@ -181,6 +181,18 @@ function App() {
     setCurrentSlideIndex(slides.length);
   };
 
+  const handleNewSlideFromTemplate = (slide: SimpleSlide, blocks: BlockInstance[]) => {
+    // Save all blocks to storage
+    blocks.forEach(block => saveBlockInstance(block));
+    
+    // Add blocks to state
+    setAllBlocks([...allBlocks, ...blocks]);
+    
+    // Add slide
+    setSlides([...slides, slide]);
+    setCurrentSlideIndex(slides.length);
+  };
+
   const handleDeleteSlide = () => {
     if (slides.length === 1) return; // Can't delete last slide
     
@@ -448,6 +460,7 @@ function App() {
         onDeleteSlide={handleDeleteSlide}
         onPresent={() => setIsPresentationMode(true)}
         onInsertBlock={handleInsertBlock}
+        onNewSlideFromTemplate={handleNewSlideFromTemplate} 
       />
 
 
@@ -462,6 +475,7 @@ function App() {
             blocks={currentSlideBlocks}
             currentLayout={currentSlide.layout}
             slideTitle={currentSlide.title}
+            currentSlide={currentSlide} 
             onLayoutChange={handleLayoutChange}
             onToggleTitle={handleToggleTitle}
             onRemoveBlock={handleRemoveFromSlide}
