@@ -27,7 +27,7 @@ interface TopMenuBarProps {
   onNewSlide: () => void;
   onDeleteSlide: () => void;
   onPresent: () => void;
-  onInsertBlock: (blockType: BlockTypeName) => void;  // Change from string
+  onInsertBlock: (blockType: BlockInstance) => void;  // Change from string
 }
 
 export function TopMenuBar({

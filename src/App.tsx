@@ -77,32 +77,22 @@ function App() {
   // BLOCK HANDLERS
   // ============================================
   
-  const handleInsertBlock = (blockType: BlockTypeName) => {
+  const handleInsertBlock = (block: BlockInstance) => {
     // Block limit: max 4 blocks per slide
     if (currentSlide.blockIds.length >= 4) {
       alert('Maximum 4 blocks per slide. Create a new slide for more content.');
       return;
     }
     
-    const blockDef = blockRegistry.get(blockType);
-    
-    if (!blockDef) {
-      console.error(`Block type ${blockType} not found in registry`);
-      return;
-    }
-    
-    // Create new block instance
-    const newBlock = blockDef.createDefault();
-    
     // Save to storage
-    saveBlockInstance(newBlock);
+    saveBlockInstance(block);
     
     // Add to state
-    setAllBlocks([...allBlocks, newBlock]);
+    setAllBlocks([...allBlocks, block]);
     
     // Add to current slide and auto-select appropriate layout
     const updatedSlides = [...slides];
-    const newBlockIds = [...currentSlide.blockIds, newBlock.id];
+    const newBlockIds = [...currentSlide.blockIds, block.id];
     
     updatedSlides[currentSlideIndex] = {
       ...currentSlide,
@@ -459,6 +449,7 @@ function App() {
         onPresent={() => setIsPresentationMode(true)}
         onInsertBlock={handleInsertBlock}
       />
+
 
       {/* Main Content - Slide Editor */}
       <div className="flex-1 max-w-7xl mx-auto px-8 py-6 w-full">
