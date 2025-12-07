@@ -30,6 +30,8 @@ interface TopMenuBarProps {
   onPresent: () => void;
   onInsertBlock: (blockType: BlockInstance) => void;  // Change from string
   onNewSlideFromTemplate: (slide: SimpleSlide, blocks: BlockInstance[]) => void;  // ADD THIS
+  viewMode: 'edit' | 'overview';  // ADD THIS
+  onToggleViewMode: () => void;
 }
 
 export function TopMenuBar({
@@ -53,6 +55,8 @@ export function TopMenuBar({
   onDeleteSlide,
   onPresent,
   onInsertBlock,
+  viewMode,           // ADD THIS
+  onToggleViewMode,
 }: TopMenuBarProps) {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showObjectivesModal, setShowObjectivesModal] = useState(false);
@@ -118,6 +122,12 @@ export function TopMenuBar({
               className="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
             >
               Objectives {lessonObjectives.length > 0 && `(${lessonObjectives.length})`}
+            </button>
+            <button
+              onClick={onToggleViewMode}
+              className="px-3 py-1.5 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors"
+            >
+              {viewMode === 'edit' ? '📊 Overview' : '✏️ Edit'}
             </button>
           </div>
 

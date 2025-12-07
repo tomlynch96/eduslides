@@ -8,6 +8,7 @@ import { LessonProvider } from './LessonContext';
 import { SlideCanvas } from './components/SlideCanvas';
 import { PresentationView } from './components/PresentationView';
 import { TopMenuBar } from './components/TopMenuBar';
+import { SlideOverview } from './components/SlideOverview'; 
 import { 
   getAllBlockInstances, 
   saveSimpleLesson,
@@ -58,7 +59,7 @@ function App() {
   // UI state
   const [isPresentationMode, setIsPresentationMode] = useState(false);
   const [fullscreenBlockId, setFullscreenBlockId] = useState<string | null>(null);
-
+  const [viewMode, setViewMode] = useState<'edit' | 'overview'>('edit');
   // ============================================
   // INITIALIZATION
   // ============================================
@@ -205,6 +206,47 @@ function App() {
     }
   };
 
+  // Slide reorder and duplicate:
+  const handleSlideReorder = (fromIndex: number, toIndex: number) => {
+    const newSlides = [...slides];
+    const [moved] = newSlides.splice(fromIndex, 1);
+    newSlides.splice(toIndex, 0, moved);
+    setSlides(newSlides);
+    
+    // Adjust current index if needed
+    if (currentSlideIndex === fromIndex) {
+      setCurrentSlideIndex(toIndex);
+    } else if (fromIndex < currentSlideIndex && toIndex >= currentSlideIndex) {
+      setCurrentSlideIndex(currentSlideIndex - 1);
+    } else if (fromIndex > currentSlideIndex && toIndex <= currentSlideIndex) {
+      setCurrentSlideIndex(currentSlideIndex + 1);
+    }
+  };
+
+  const handleSlideDuplicate = (index: number) => {
+    const slideToDupe = slides[index];
+    const blocksOnSlide = allBlocks.filter(b => slideToDupe.blockIds.includes(b.id));
+    
+    // Create copies of all blocks
+    const newBlocks = blocksOnSlide.map(block => ({
+      ...block,
+      id: generateId(),
+    }));
+    
+    // Save new blocks
+    newBlocks.forEach(b => saveBlockInstance(b));
+    
+    // Create new slide
+    const newSlide: SimpleSlide = {
+      ...slideToDupe,
+      id: generateId(),
+      blockIds: newBlocks.map(b => b.id),
+    };
+    
+    // Add to state
+    setAllBlocks([...allBlocks, ...newBlocks]);
+    setSlides([...slides, newSlide]);
+  };
   const handlePreviousSlide = () => {
     if (currentSlideIndex > 0) {
       setCurrentSlideIndex(currentSlideIndex - 1);
@@ -461,29 +503,47 @@ function App() {
         onPresent={() => setIsPresentationMode(true)}
         onInsertBlock={handleInsertBlock}
         onNewSlideFromTemplate={handleNewSlideFromTemplate} 
+        viewMode={viewMode} 
+        onToggleViewMode={() => setViewMode(viewMode === 'edit' ? 'overview' : 'edit')} 
       />
 
 
-      {/* Main Content - Slide Editor */}
+      {/* Main Content - Slide Editor or Overview */}
       <div className="flex-1 max-w-7xl mx-auto px-8 py-6 w-full">
-        <LessonProvider
-          lessonObjectives={lessonObjectives}
-          completedObjectives={completedObjectives}
-          onToggleObjective={handleToggleObjective}
-        >
-          <SlideCanvas
-            blocks={currentSlideBlocks}
-            currentLayout={currentSlide.layout}
-            slideTitle={currentSlide.title}
-            currentSlide={currentSlide} 
-            onLayoutChange={handleLayoutChange}
-            onToggleTitle={handleToggleTitle}
-            onRemoveBlock={handleRemoveFromSlide}
-            onUpdateBlock={handleUpdateBlock}
-            fullscreenBlockId={fullscreenBlockId}
-            onToggleBlockFullscreen={handleToggleBlockFullscreen}
+        {viewMode === 'overview' ? (
+          <SlideOverview
+            slides={slides}
+            blocks={allBlocks}
+            currentSlideIndex={currentSlideIndex}
+            onSlideSelect={(index) => {
+              setCurrentSlideIndex(index);
+              setViewMode('edit');
+            }}
+            onSlideReorder={handleSlideReorder}
+            onSlideDelete={handleDeleteSlide}
+            onSlideDuplicate={handleSlideDuplicate}
+            onSlideAdd={handleNewSlide}
           />
-        </LessonProvider>
+        ) : (
+          <LessonProvider
+            lessonObjectives={lessonObjectives}
+            completedObjectives={completedObjectives}
+            onToggleObjective={handleToggleObjective}
+          >
+            <SlideCanvas
+              blocks={currentSlideBlocks}
+              currentLayout={currentSlide.layout}
+              slideTitle={currentSlide.title}
+              currentSlide={currentSlide}
+              onLayoutChange={handleLayoutChange}
+              onToggleTitle={handleToggleTitle}
+              onRemoveBlock={handleRemoveFromSlide}
+              onUpdateBlock={handleUpdateBlock}
+              fullscreenBlockId={fullscreenBlockId}
+              onToggleBlockFullscreen={handleToggleBlockFullscreen}
+            />
+          </LessonProvider>
+        )}
       </div>
     </div>
   );
